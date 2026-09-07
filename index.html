@@ -3,104 +3,126 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Visor de Bienestar ✨</title>
+    <title>Escaner Hibrido ✨</title>
     <style>
       html, body {
         margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
         font-family: 'Segoe UI', sans-serif; background-color: #000; color: white;
       }
 
-      /* Fondo que simula la cámara trasera encendida buscando un objetivo */
-      #pantalla-camara {
-        width: 100%; height: 100%;
-        background: radial-gradient(circle, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%);
-        opacity: 0.4; filter: blur(4px); position: absolute; top:0; left:0; z-index: 1;
+      /* Video nativo que ocupará TODO el fondo de la pantalla */
+      #video-fondo {
+        position: fixed; top: 50%; left: 50%;
+        min-width: 100%; min-height: 100%;
+        width: auto; height: auto;
+        transform: translateX(-50%) translateY(-50%);
+        z-index: 1; object-fit: cover;
       }
 
-      /* Interfaz de Mira Láser e indicaciones en pantalla */
+      /* Interfaz de escaneo fija sobre el video */
       .interfaz-visor {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         display: flex; flex-direction: column; justify-content: space-between;
         align-items: center; padding: 40px 20px; box-sizing: border-box; z-index: 5;
+        background: rgba(0,0,0,0.2); /* Sombreado sutil sobre el video */
       }
 
       .cuadro-enfoque {
-        width: 240px; height: 240px; border: 3px solid rgba(0, 255, 150, 0.8);
+        width: 240px; height: 240px; border: 3px solid #00ff96;
         border-radius: 20px; position: relative; margin: auto;
-        box-shadow: 0 0 20px rgba(0, 255, 150, 0.3);
+        box-shadow: 0 0 20px rgba(0, 255, 150, 0.4);
       }
 
-      /* Línea láser parpadeante que simula escaneo */
       .linea-laser {
         width: 100%; height: 4px; background-color: #00ff96; position: absolute;
         top: 0; box-shadow: 0 0 12px #00ff96;
         animation: escanear 2s infinite ease-in-out;
       }
 
-      /* Estilo del mensaje oculto que flota en "3D" hacia el frente */
-      #mensaje-3d {
+      /* Mensaje final flotante */
+      #mensaje-emergente {
         display: none; position: absolute; top: 50%; left: 50%;
         transform: translate(-50%, -50%) scale(0.5);
-        background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px); border: 2px solid rgba(255, 87, 51, 0.6);
+        background: rgba(15, 32, 39, 0.85); backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px); border: 2px solid #FF8D1A;
         padding: 30px 20px; border-radius: 24px; text-align: center;
-        width: 280px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); z-index: 10; opacity: 0;
+        width: 280px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); z-index: 10; opacity: 0;
       }
 
       .animar-entrada {
         display: block !important;
-        animation: flotarHaciaAdelante 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        animation: brotar 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
       }
 
       @keyframes escanear {
-        0% { top: 0%; opacity: 0.3; }
-        50% { top: 100%; opacity: 1; }
-        100% { top: 0%; opacity: 0.3; }
+        0% { top: 0%; }
+        50% { top: 100%; }
+        100% { top: 0%; }
       }
 
-      @keyframes flotarHaciaAdelante {
+      @keyframes brotar {
         100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
       }
     </style>
   </head>
   <body>
 
-    <!-- Fondo de "cámara abstracta" -->
-    <div id="pantalla-camara"></div>
+    <!-- Elemento de video HTML5 puro para la cámara trasera -->
+    <video id="video-fondo" autoplay playsinline muted></video>
 
-    <!-- Visor del escáner en pantalla -->
+    <!-- Visor de la interfaz encima de la cámara -->
     <div class="interfaz-visor" id="visor">
-      <div style="text-align: center;">
-        <h2 style="margin: 0; font-size: 20px; letter-spacing: 1px; color: #00ff96;">SISTEMA AR CONECTADO</h2>
-        <p style="margin: 5px 0 0 0; font-size: 13px; color: #aaa;">Mantén el QR centrado para calibrar</p>
+      <div style="text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
+        <h2 style="margin: 0; font-size: 20px; letter-spacing: 1px; color: #00ff96;">ESCANEANDO ENTORNO</h2>
+        <p style="margin: 5px 0 0 0; font-size: 13px; color: #ddd;">Apunta hacia el objetivo</p>
       </div>
 
       <div class="cuadro-enfoque">
         <div class="linea-laser"></div>
       </div>
 
-      <p style="font-size: 14px; color: #eee; background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 20px;">
-        🤖 Analizando vibras del entorno...
+      <p style="font-size: 14px; font-weight: bold; background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 20px; text-shadow: 0 1px 3px #000;">
+        🤖 Leyendo código biométrico...
       </p>
     </div>
 
-    <!-- El mensaje sorpresa que aparece mágicamente -->
-    <div id="mensaje-3d">
+    <!-- Mensaje Sorpresa -->
+    <div id="mensaje-emergente">
       <span style="font-size: 32px;">✨</span>
-      <h2 style="font-size: 22px; margin: 10px 0; color: #FF8D1A;">¡Objetivo Detectado!</h2>
+      <h2 style="font-size: 22px; margin: 10px 0; color: #FF8D1A;">¡Lectura Completa!</h2>
       <p style="font-size: 16px; line-height: 1.5; margin: 0; color: #fff; font-weight: 500;">
         ¡Lo estás haciendo genial!<br>Tu sonrisa cambia el día.
       </p>
-      <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #FF5733; color: white; border: none; border-radius: 15px; font-weight: bold; cursor: pointer;">Escanear otra vez</button>
+      <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #FF5733; color: white; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(255,87,51,0.4);">Repetir Escaneo</button>
     </div>
 
     <script>
-      // Al pasar exactamente 2.5 segundos de "escaneo", el visor se apaga y emerge el mensaje sorpresa
-      setTimeout(() => {
-        document.getElementById('visor').style.display = 'none';
-        document.getElementById('pantalla-camara').style.opacity = '0.7'; // Ilumina el fondo
-        document.getElementById('mensaje-3d').classList.add('animar-entrada');
-      }, 2500);
+      // Forzamos el encendido de la cámara trasera de forma nativa e inmediata
+      const video = document.getElementById('video-fondo');
+      
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { exact: "environment" } } // Intenta forzar la cámara trasera de forma estricta
+      })
+      .then(function(stream) {
+        video.srcObject = stream;
+        
+        // Iniciamos la cuenta regresiva SOLO si la cámara encendió con éxito
+        setTimeout(() => {
+          document.getElementById('visor').style.display = 'none';
+          document.getElementById('mensaje-emergente').classList.add('animar-entrada');
+        }, 2500);
+      })
+      .catch(function(error) {
+        // Alternativa si el teléfono no tiene una cámara etiquetada como "environment" (ej. algunas laptops o tablets)
+        navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(stream) {
+          video.srcObject = stream;
+          setTimeout(() => {
+            document.getElementById('visor').style.display = 'none';
+            document.getElementById('mensaje-emergente').classList.add('animar-entrada');
+          }, 2500);
+        });
+      });
     </script>
   </body>
 </html>
