@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mensaje de Alegría AR</title>
+    <!-- Usamos librerías alojadas en CDNs ultra estables y compatibles con móviles -->
+    <script src="https://aframe.io"></script>
+    <script src="https://jsdelivr.net"></script>
+    <style>
+      /* Estilos para asegurarnos de que la pantalla no se quede en blanco de forma pasiva */
+      body { margin: 0; overflow: hidden; font-family: sans-serif; background-color: #121212; }
+      #interfaz-inicio {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        background: rgba(0, 0, 0, 0.8); z-index: 9999; color: white; text-align: center; padding: 20px;
+      }
+      button {
+        padding: 15px 30px; font-size: 18px; border: none; border-radius: 25px;
+        background-color: #FF5733; color: white; font-weight: bold; cursor: pointer; margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- Pantalla de bienvenida para forzar la interacción del usuario y activar la cámara -->
+    <div id="interfaz-inicio">
+      <h2>✨ Portal de Bienestar AR ✨</h2>
+      <p>Presiona el botón para activar la cámara y descubrir tu mensaje motivacional.</p>
+      <button onclick="iniciarExperiencia()">¡Activar Magia!</button>
+    </div>
+
+    <!-- Escena de Realidad Aumentada -->
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;" vr-mode-ui="enabled: false">
+      
+      <!-- Marcador universal HIRO -->
+      <a-marker preset="hiro">
+        <a-text 
+          value="¡Lo estas haciendo genial!\nTu sonrisa cambia el dia." 
+          position="0 0.5 0" 
+          rotation="-90 0 0" 
+          color="#FF5733" 
+          align="center" 
+          width="4">
+        </a-text>
+      </a-marker>
+
+      
+    </a-scene>
+
+    <script>
+      function iniciarExperiencia() {
+        // Ocultamos la pantalla de inicio
+        document.getElementById('interfaz-inicio').style.display = 'none';
+        // Forzamos al navegador a inicializar los componentes de la cámara
+        const scene = document.querySelector('a-scene');
+        if (scene) {
+          scene.resize();
+        }
+      }
+    </script>
+  </body>
+</html>
