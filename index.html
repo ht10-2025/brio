@@ -3,96 +3,104 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Momento de Alegría ✨</title>
+    <title>Visor de Bienestar ✨</title>
     <style>
-      /* Fondo animado moderno con degradado para simular energía */
       html, body {
         margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
-        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #0f2027 100%);
-        display: flex; flex-direction: column; justify-content: center; align-items: center;
-        color: white; text-align: center; box-sizing: border-box;
+        font-family: 'Segoe UI', sans-serif; background-color: #000; color: white;
       }
 
-      /* Contenedor principal con efecto de cristal (Glassmorphism) */
-      .tarjeta {
-        background: rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 24px; padding: 35px 25px; margin: 20px;
-        max-width: 320px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-        transition: all 0.4s ease;
+      /* Fondo que simula la cámara trasera encendida buscando un objetivo */
+      #pantalla-camara {
+        width: 100%; height: 100%;
+        background: radial-gradient(circle, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%);
+        opacity: 0.4; filter: blur(4px); position: absolute; top:0; left:0; z-index: 1;
       }
 
-      /* Círculo animado central que simula un escáner */
-      .escaner-anillo {
-        width: 100px; height: 100px; border-radius: 50%;
-        border: 4px dashed rgba(255, 87, 51, 0.6);
-        margin: 0 auto 25px auto; display: flex; justify-content: center; align-items: center;
-        animation: rotar 8s linear infinite; position: relative;
-      }
-      .escaner-anillo::after {
-        content: '✨'; font-size: 32px; animation: parpadeo 1.5s infinite alternate;
+      /* Interfaz de Mira Láser e indicaciones en pantalla */
+      .interfaz-visor {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        display: flex; flex-direction: column; justify-content: space-between;
+        align-items: center; padding: 40px 20px; box-sizing: border-box; z-index: 5;
       }
 
-      button {
-        padding: 16px 36px; font-size: 18px; border: none; border-radius: 30px;
-        background: linear-gradient(45deg, #FF5733, #FF8D1A); color: white; font-weight: bold; 
-        cursor: pointer; margin-top: 15px; box-shadow: 0 5px 20px rgba(255,87,51,0.4);
-        transition: transform 0.2s, box-shadow 0.2s; width: 100%;
-      }
-      button:active { transform: scale(0.96); }
-
-      /* Animación del mensaje motivacional cuando aparece */
-      .mensaje-revelado {
-        font-size: 22px; font-weight: 600; line-height: 1.5; color: #fff;
-        text-shadow: 0 2px 10px rgba(255,255,255,0.2); animation: aparecer 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      .cuadro-enfoque {
+        width: 240px; height: 240px; border: 3px solid rgba(0, 255, 150, 0.8);
+        border-radius: 20px; position: relative; margin: auto;
+        box-shadow: 0 0 20px rgba(0, 255, 150, 0.3);
       }
 
-      @keyframes rotar { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-      @keyframes parpadeo { 0% { opacity: 0.4; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.1); } }
-      @keyframes aparecer { 0% { opacity: 0; transform: scale(0.7); } 100% { opacity: 1; transform: scale(1); } }
+      /* Línea láser parpadeante que simula escaneo */
+      .linea-laser {
+        width: 100%; height: 4px; background-color: #00ff96; position: absolute;
+        top: 0; box-shadow: 0 0 12px #00ff96;
+        animation: escanear 2s infinite ease-in-out;
+      }
+
+      /* Estilo del mensaje oculto que flota en "3D" hacia el frente */
+      #mensaje-3d {
+        display: none; position: absolute; top: 50%; left: 50%;
+        transform: translate(-50%, -50%) scale(0.5);
+        background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px); border: 2px solid rgba(255, 87, 51, 0.6);
+        padding: 30px 20px; border-radius: 24px; text-align: center;
+        width: 280px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); z-index: 10; opacity: 0;
+      }
+
+      .animar-entrada {
+        display: block !important;
+        animation: flotarHaciaAdelante 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      }
+
+      @keyframes escanear {
+        0% { top: 0%; opacity: 0.3; }
+        50% { top: 100%; opacity: 1; }
+        100% { top: 0%; opacity: 0.3; }
+      }
+
+      @keyframes flotarHaciaAdelante {
+        100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      }
     </style>
   </head>
   <body>
 
-    <div class="tarjeta" id="contenedor">
-      <div class="escaner-anillo" id="icono"></div>
-      <div id="pantalla-contenido">
-        <h2 style="font-size: 24px; margin: 0 0 10px 0;">Portal de Bienestar</h2>
-        <p style="font-size: 15px; color: #e0e0e0; line-height: 1.5; margin-bottom: 20px;">
-          Esta tarjeta digital contiene un mensaje de aliento exclusivo generado para ti.
-        </p>
-        <button onclick="revelarMensaje()">¡Descubrir Mensaje!</button>
+    <!-- Fondo de "cámara abstracta" -->
+    <div id="pantalla-camara"></div>
+
+    <!-- Visor del escáner en pantalla -->
+    <div class="interfaz-visor" id="visor">
+      <div style="text-align: center;">
+        <h2 style="margin: 0; font-size: 20px; letter-spacing: 1px; color: #00ff96;">SISTEMA AR CONECTADO</h2>
+        <p style="margin: 5px 0 0 0; font-size: 13px; color: #aaa;">Mantén el QR centrado para calibrar</p>
       </div>
+
+      <div class="cuadro-enfoque">
+        <div class="linea-laser"></div>
+      </div>
+
+      <p style="font-size: 14px; color: #eee; background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 20px;">
+        🤖 Analizando vibras del entorno...
+      </p>
+    </div>
+
+    <!-- El mensaje sorpresa que aparece mágicamente -->
+    <div id="mensaje-3d">
+      <span style="font-size: 32px;">✨</span>
+      <h2 style="font-size: 22px; margin: 10px 0; color: #FF8D1A;">¡Objetivo Detectado!</h2>
+      <p style="font-size: 16px; line-height: 1.5; margin: 0; color: #fff; font-weight: 500;">
+        ¡Lo estás haciendo genial!<br>Tu sonrisa cambia el día.
+      </p>
+      <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #FF5733; color: white; border: none; border-radius: 15px; font-weight: bold; cursor: pointer;">Escanear otra vez</button>
     </div>
 
     <script>
-      function revelarMensaje() {
-        const contenido = document.getElementById('pantalla-contenido');
-        const icono = document.getElementById('icono');
-        
-        // Cambiamos el icono a un modo activo radiante
-        icono.style.border = "4px solid #FF8D1A";
-        icono.style.animation = "parpadeo 0.5s infinite alternate";
-        
-        // Efecto rápido de "procesamiento" (0.5 segundos) antes de mostrar la magia
-        contenido.innerHTML = `<p style="font-size: 16px; color: #FF8D1A; font-weight: bold; margin: 20px 0;">Sincronizando energía...</p>`;
-        
-        setTimeout(() => {
-          // Reemplazamos por el mensaje final con su animación impecable
-          contenido.innerHTML = `
-            <div class="mensaje-revelado">
-              ¡Lo estás haciendo genial!<br>
-              <span style="color: #FF8D1A; font-size: 16px; font-weight: normal; display:block; margin-top:15px;">
-                Sonríe, tu esfuerzo realmente vale la pena.
-              </span>
-            </div>
-            <button onclick="window.location.reload()" style="background: rgba(255,255,255,0.15); box-shadow: none; font-size: 14px; padding: 10px; margin-top: 25px;">Volver a leer</button>
-          `;
-        }, 600);
-      }
+      // Al pasar exactamente 2.5 segundos de "escaneo", el visor se apaga y emerge el mensaje sorpresa
+      setTimeout(() => {
+        document.getElementById('visor').style.display = 'none';
+        document.getElementById('pantalla-camara').style.opacity = '0.7'; // Ilumina el fondo
+        document.getElementById('mensaje-3d').classList.add('animar-entrada');
+      }, 2500);
     </script>
   </body>
 </html>
