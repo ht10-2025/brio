@@ -5,16 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Mensaje de Alegría AR</title>
     
-    <!-- Librerías oficiales ultra estables -->
+    <!-- Librerías estables oficiales -->
     <script src="https://aframe.io"></script>
     <script src="https://githack.com"></script>
     
     <style>
-      body { margin: 0; overflow: hidden; font-family: sans-serif; background-color: #000000; }
+      /* Evitamos que el navegador recalcule el tamaño y apague la cámara */
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; }
+      
+      /* Menú flotante estilo 'Overlay' para no alterar las dimensiones de la cámara */
       #interfaz-inicio {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         display: flex; flex-direction: column; justify-content: center; align-items: center;
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); z-index: 99999; color: white; text-align: center; padding: 20px;
+        background: linear-gradient(135deg, rgba(30,60,114,0.95) 0%, rgba(42,82,152,0.95) 100%); 
+        z-index: 9999; color: white; text-align: center; padding: 20px; box-sizing: border-box;
       }
       button {
         padding: 18px 40px; font-size: 20px; border: none; border-radius: 35px;
@@ -25,14 +29,14 @@
   </head>
   <body>
 
-    <!-- Pantalla de bienvenida limpia -->
+    <!-- Menú de inicio flotante -->
     <div id="interfaz-inicio">
       <h2 style="font-size: 24px; margin-bottom: 5px;">✨ Portal de Bienestar ✨</h2>
-      <p style="font-size: 15px; color: #e0e0e0; max-width: 280px;">Presiona el botón para descubrir tu mensaje en Realidad Aumentada.</p>
+      <p style="font-size: 15px; color: #e0e0e0; max-width: 280px;">Presiona el botón para estabilizar los sensores y descubrir tu mensaje.</p>
       <button onclick="iniciarExperiencia()">¡Activar Magia!</button>
     </div>
 
-    <!-- Escena configurada para que AR.js gestione la cámara de forma nativa sin choques -->
+    <!-- La escena AR arranca de fondo inmediatamente para asegurar el permiso -->
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; facingMode: environment;" vr-mode-ui="enabled: false">
       
       <a-marker preset="hiro">
@@ -51,14 +55,16 @@
 
     <script>
       function iniciarExperiencia() {
-        // 1. Simplemente ocultamos la capa azul del menú
-        document.getElementById('interfaz-inicio').style.display = 'none';
+        // En lugar de alterar la estructura del documento, desvanecemos la capa suavemente
+        const capa = document.getElementById('interfaz-inicio');
+        capa.style.transition = "opacity 0.4s ease";
+        capa.style.opacity = "0";
         
-        // 2. Forzamos a la ventana del navegador a redimensionarse. 
-        // Esto despierta el video de AR.js que ya tenía los permisos concedidos por Chrome.
         setTimeout(() => {
+          capa.style.display = 'none';
+          // Disparamos un evento global para acoplar la cámara si se quedó pausada
           window.dispatchEvent(new Event('resize'));
-        }, 200);
+        }, 400);
       }
     </script>
   </body>
