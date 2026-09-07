@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Mensaje de Alegría AR</title>
     
-    <!-- Librerías estables oficiales -->
+    <!-- Librerías oficiales ultra estables -->
     <script src="https://aframe.io"></script>
     <script src="https://githack.com"></script>
     
@@ -25,15 +25,15 @@
   </head>
   <body>
 
-    <!-- Pantalla de bienvenida interactiva -->
+    <!-- Pantalla de bienvenida limpia -->
     <div id="interfaz-inicio">
       <h2 style="font-size: 24px; margin-bottom: 5px;">✨ Portal de Bienestar ✨</h2>
-      <p style="font-size: 15px; color: #e0e0e0; max-width: 280px;">Presiona el botón para dar permiso a la cámara y descubrir tu mensaje.</p>
+      <p style="font-size: 15px; color: #e0e0e0; max-width: 280px;">Presiona el botón para descubrir tu mensaje en Realidad Aumentada.</p>
       <button onclick="iniciarExperiencia()">¡Activar Magia!</button>
     </div>
 
-    <!-- Escena AR vacía en espera de la señal de la cámara -->
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
+    <!-- Escena configurada para que AR.js gestione la cámara de forma nativa sin choques -->
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; facingMode: environment;" vr-mode-ui="enabled: false">
       
       <a-marker preset="hiro">
         <a-text 
@@ -50,32 +50,15 @@
     </a-scene>
 
     <script>
-      // Pausamos la escena al cargar la página para evitar pantallas negras
-      const escena = document.querySelector('a-scene');
-      escena.pause();
-
       function iniciarExperiencia() {
-        // Pedimos los permisos de la cámara directamente al sistema operativo del celular
-        navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: 'environment' } // Forza el uso de la cámara trasera
-        })
-        .then(function(stream) {
-          // Si el usuario acepta, ocultamos la interfaz azul
-          document.getElementById('interfaz-inicio').style.display = 'none';
-          
-          // Despertamos el motor de Realidad Aumentada
-          escena.play();
-          
-          // Forzamos al navegador a redibujar la pantalla para acoplar la cámara trasera
-          setTimeout(() => {
-            window.dispatchEvent(new Event('resize'));
-          }, 300);
-        })
-        .catch(function(err) {
-          // Mensaje de error amigable en caso de que falten permisos globales en el celular
-          alert("Por favor, asegúrate de permitir el acceso a la cámara en los ajustes de tu navegador.");
-          console.log("Error al abrir cámara: ", err);
-        });
+        // 1. Simplemente ocultamos la capa azul del menú
+        document.getElementById('interfaz-inicio').style.display = 'none';
+        
+        // 2. Forzamos a la ventana del navegador a redimensionarse. 
+        // Esto despierta el video de AR.js que ya tenía los permisos concedidos por Chrome.
+        setTimeout(() => {
+          window.dispatchEvent(new Event('resize'));
+        }, 200);
       }
     </script>
   </body>
