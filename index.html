@@ -8,7 +8,6 @@
       html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; background-color: #000; }
       
       #video-camara { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
-      #canvas-invisible { display: none; }
 
       /* Interfaz de guía visual verde */
       #guia-escaneo {
@@ -16,7 +15,7 @@
         display: flex; flex-direction: column; justify-content: space-between; align-items: center;
         padding: 40px 20px; box-sizing: border-box; z-index: 5; pointer-events: none;
         opacity: 1;
-        transition: opacity 0.5s ease;
+        transition: opacity 0.4s ease;
       }
       .cuadro-mira {
         width: 220px; height: 220px; border: 3px dashed #00ff96; border-radius: 20px;
@@ -32,10 +31,11 @@
       .procesando-mira { border-color: #FF8D1A !important; box-shadow: 0 0 25px rgba(255, 141, 26, 0.6) !important; }
       .procesando-laser { background-color: #FF8D1A !important; box-shadow: 0 0 15px #FF8D1A !important; animation: procesar 0.3s infinite alternate !important; }
 
-      /* ESCENA TRIDIMENSIONAL */
+      /* ESCENA TRIDIMENSIONAL DEL PORTAL */
       #espacio-3d {
         display: none; position: absolute; width: 100%; height: 100%;
         perspective: 1000px; perspective-origin: center; z-index: 10;
+        background: rgba(0,0,0,0.4); /* Sombreado sutil sobre la cámara en vivo */
       }
 
       .tarjeta-3d {
@@ -50,7 +50,7 @@
         transform: translate(-50%, -50%) rotateX(45deg) translateZ(-200px);
         transform-style: preserve-3d;
         opacity: 0;
-        transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.6s ease;
+        transition: transform 0.7s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.5s ease;
       }
 
       .proyectar-3d {
@@ -84,7 +84,6 @@
   <body>
 
     <video id="video-camara" autoplay playsinline muted></video>
-    <canvas id="canvas-invisible"></canvas>
 
     <div id="guia-escaneo">
       <h2 id="texto-estado" style="margin: 0; font-size: 18px; color: #00ff96; text-shadow: 0 2px 4px #000; letter-spacing: 1px;">MODO ESCÁNER ACTIVO</h2>
@@ -111,7 +110,6 @@
           <span id="texto-consejo" style="color: #cbd5e1; font-size: 13.5px; line-height: 1.45;">Cargando...</span>
         </div>
 
-        <!-- El botón ahora ejecuta la función de reactivación suave -->
         <button onclick="reestablecerEscaner()">Volver a Escanear</button>
       </div>
     </div>
@@ -140,7 +138,7 @@
         "Reconoce tu avance de hoy. Has gestionado situaciones complejas y eso cuenta mucho."
       ];
 
-      // Instanciamos el lector principal
+      // Inicializamos el lector QR
       qrScanner = new QrScanner(
         video,
         result => validarCodigo(result),
@@ -151,25 +149,21 @@
         }
       );
 
-      // Arrancamos el flujo inicial
-      arrancarMotor();
-
-      function arrancarMotor() {
-        qrScanner.start().catch(err => {
-          console.error(err);
-          navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-          .then(stream => { video.srcObject = stream; video.play(); });
-        });
-      }
+      // Iniciamos la cámara una única vez al cargar
+      qrScanner.start().catch(err => {
+        console.error(err);
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(stream => { video.srcObject = stream; video.play(); });
+      });
 
       function validarCodigo(result) {
+        // Regla de Oro: Si ya detectó un código válido, ignora lecturas secundarias
         if (!escaneoActivo) return;
 
         const textoDecodificado = result.data ? result.data : result;
 
         if (textoDecodificado.includes("github.io") || textoDecodificado.includes("localhost") || textoDecodificado.includes("127.0.0.1")) {
-          escaneoActivo = false; 
-          qrScanner.stop(); // Pausa la lectura en segundo plano
+          escaneoActivo = false; // Desactivamos el switch lógico, la cámara sigue encendida
 
           const indiceAleatorio = Math.floor(Math.random() * misionesBienestar.length);
           textoConsejo.innerText = misionesBienestar[indiceAleatorio];
@@ -190,9 +184,7 @@
           setTimeout(() => {
             guia.style.display = 'none';
             
-            // ELIMINADA la línea que apagaba la cámara nativa (track.stop) 
-            // para que el lente se quede encendido esperando en el fondo de la tarjeta.
-
+            // LA CÁMARA SE QUEDA PRENDIDA COMPLETAMENTE CORRIENDO DETRÁS DE LA CAPA
             espacio3D.style.display = 'block';
             setTimeout(() => {
               tarjeta.classList.add('proyectar-3d');
@@ -202,15 +194,13 @@
         }, 1500);
       }
 
-      // NUEVA FUNCIÓN DE RESETEO INTERNO Y FLUIDO
+      // REINICIO DE BANDA LÓGICA (Cámara intacta)
       window.reestablecerEscaner = function() {
-        // 1. Desvanecemos la tarjeta 3D hacia el fondo
         tarjeta.classList.remove('proyectar-3d');
         
         setTimeout(() => {
           espacio3D.style.display = 'none';
           
-          // 2. Restauramos los estilos originales verdes del escáner
           mira.classList.remove('procesando-mira');
           laser.classList.remove('procesando-laser');
           textoEstado.style.color = '#00ff96';
@@ -218,12 +208,13 @@
           textoInferior.style.background = 'rgba(0,0,0,0.7)';
           textoInferior.innerText = 'Apunta al QR físico para activar tu mensaje';
           
-          // 3. Volvemos a mostrar la guía visual
           guia.style.display = 'flex';
           setTimeout(() => { guia.style.opacity = '1'; }, 50);
-
-          // 4. Reactivamos el motor de escaneo y el bucle
+          
+          // Activamos de nuevo el flag lógico para que empiece a buscar píxeles del QR otra vez
           escaneoActivo = true;
-          arrancarMotor();
-        }, 600);
-    }
+        }, 500);
+      }
+    </script>
+  </body>
+</html>
