@@ -7,7 +7,6 @@
     <style>
       html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; background-color: #000; }
       
-      /* Video nativo fluido */
       #video-camara { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
 
       /* Interfaz de guía visual verde */
@@ -16,7 +15,7 @@
         display: flex; flex-direction: column; justify-content: space-between; align-items: center;
         padding: 40px 20px; box-sizing: border-box; z-index: 5; pointer-events: none;
         opacity: 1;
-        transition: opacity 0.4s ease;
+        transition: opacity 0.5s ease;
       }
       .cuadro-mira {
         width: 220px; height: 220px; border: 3px dashed #00ff96; border-radius: 20px;
@@ -29,19 +28,18 @@
         background-color: #00ff96; box-shadow: 0 0 8px #00ff96; animation: escanear 2s infinite ease-in-out;
       }
 
-      /* Estados de procesamiento de la mira láser */
       .procesando-mira { border-color: #FF8D1A !important; box-shadow: 0 0 25px rgba(255, 141, 26, 0.6) !important; }
       .procesando-laser { background-color: #FF8D1A !important; box-shadow: 0 0 15px #FF8D1A !important; animation: procesar 0.3s infinite alternate !important; }
 
-      /* ESCENA QUE DA PERSPECTIVA AL EFECTO 3D */
+      /* CONTENEDOR DE PERSPECTIVA 3D */
       #escena-3d {
         display: none; position: absolute; width: 100%; height: 100%;
         perspective: 1200px; perspective-origin: center; z-index: 10;
         background: rgba(0, 0, 0, 0.4); /* Sombreado sutil sobre el video */
       }
 
-      /* TARJETA MEJORADA CON EFECTO CRISTAL Y PERSPECTIVA TRIDIMENSIONAL */
-      .tarjeta-3d {
+      /* TARJETA CON EFECTO CRISTAL Y PERSPECTIVA TRIDIMENSIONAL FUTURA */
+      #mensaje-aliento {
         position: absolute; top: 50%; left: 50%; 
         background: linear-gradient(135deg, rgba(15, 32, 39, 0.96) 0%, rgba(32, 58, 67, 0.96) 100%);
         backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
@@ -52,7 +50,7 @@
         transform: translate(-50%, -50%) rotateX(35deg) translateZ(-150px);
         transform-style: preserve-3d;
         opacity: 0;
-        transition: transform 0.7s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.5s ease;
+        transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.6s ease;
       }
       
       /* Animación de proyección hacia el frente */
@@ -61,8 +59,12 @@
         transform: translate(-50%, -50%) rotateX(0deg) translateZ(50px) !important; 
       }
       
-      .icono-animado { font-size: 45px; margin-bottom: 5px; display: inline-block; animation: latido 1.5s infinite alternate cubic-bezier(0.215, 0.610, 0.355, 1); }
+      .icono-animado {
+        font-size: 45px; margin-bottom: 5px; display: inline-block;
+        animation: latido 1.5s infinite alternate cubic-bezier(0.215, 0.610, 0.355, 1);
+      }
 
+      /* Título con corrección de estándares para evitar alertas en VS Code */
       .titulo-brillante {
         font-size: 24px; margin: 5px 0 15px 0; font-weight: 800;
         background: linear-gradient(45deg, #FFF, #FF8D1A);
@@ -71,7 +73,10 @@
         -webkit-text-fill-color: transparent;
       }
 
-      .caja-mision { background: rgba(255, 255, 255, 0.05); border-left: 3px solid #FF8D1A; padding: 14px; border-radius: 12px; margin-top: 25px; text-align: left; box-sizing: border-box; }
+      .caja-mision {
+        background: rgba(255, 255, 255, 0.05); border-left: 3px solid #FF8D1A;
+        padding: 14px; border-radius: 12px; margin-top: 25px; text-align: left; box-sizing: border-box;
+      }
 
       button {
         padding: 14px 28px; font-size: 16px; border: none; border-radius: 25px;
@@ -79,7 +84,6 @@
         cursor: pointer; margin-top: 25px; box-shadow: 0 5px 15px rgba(255,87,51,0.4);
         transition: all 0.2s ease; pointer-events: auto; width: 100%;
       }
-      button:active { transform: scale(0.97); }
       
       @keyframes escanear { 0%, 100% { top: 0%; } 50% { top: 100%; } }
       @keyframes procesar { 0% { top: 20%; opacity: 0.4; } 100% { top: 80%; opacity: 1; } }
@@ -88,43 +92,42 @@
   </head>
   <body>
 
-    <!-- Video de la cámara nativa de fondo continuo -->
+    <!-- El video nativo corre continuamente sin interrupciones -->
     <video id="video-camara" autoplay playsinline muted></video>
 
     <div id="guia-escaneo">
-      <h2 id="texto-estado" style="margin: 0; font-size: 18px; color: #00ff96; text-shadow: 0 2px 4px #000; letter-spacing: 1px;">MODO ESCÁNER ACTIVO</h2>
+      <h2 id="texto-estado" style="margin: 0; font-size: 18px; color: #00ff96; text-shadow: 0 2px 4px #000; letter-spacing: 1px; transition: color 0.3s;">MODO ESCÁNER ACTIVO</h2>
       <div class="cuadro-mira" id="mira">
         <div id="laser"></div>
       </div>
-      <p id="texto-inferior" style="font-size: 14px; color: #fff; background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 20px; font-weight: bold; text-shadow: 0 1px 2px #000;">
+      <p id="texto-inferior" style="font-size: 14px; color: #fff; background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 20px; font-weight: bold; text-shadow: 0 1px 2px #000; transition: all 0.3s;">
         Apunta al QR físico para activar tu mensaje
       </p>
     </div>
 
-    <!-- ESCENA 3D HOLOGRÁFICA -->
+    <!-- CONTENEDOR 3D HOLOGRÁFICO -->
     <div id="escena-3d">
-      <div id="mensaje-aliento" class="tarjeta-3d">
+      <div id="mensaje-aliento">
         <div class="icono-animado">✨🛸✨</div>
         <h2 class="titulo-brillante">¡Sintonía Exitosa!</h2>
         
+        <!-- Mensaje extendido reflexivo -->
         <p style="font-size: 14.5px; line-height: 1.6; margin: 0; color: #e2e8f0; font-weight: 400;">
-          A veces el ritmo del día avanza tan rápido que olvidamos detenernos a asimilar el camino recorrido. Respira hondo. Estás gestionando tus responsabilidades con gran dedicación y cada pequeño esfuerzo diario es valioso. Confía en tu proceso y avanza a tu propio tiempo.
+          A veces el ritmo del día avanza tan rápido que olvidamos detenernos a asimilar el camino recorrido. Respira hondo. Estás gestiónando tus responsabilidades con gran dedicación y cada pequeño esfuerzo diario es valioso. Confía en tu proceso y avanza a tu propio tiempo.
         </p>
         
+        <!-- Misiones de bienestar aleatorias -->
         <div class="caja-mision">
           <strong style="color: #FF8D1A; font-size: 11px; display: block; margin-bottom: 5px; letter-spacing: 0.5px; text-transform: uppercase;">Misión de Bienestar</strong>
           <span id="texto-mision" style="color: #cbd5e1; font-size: 13.5px; line-height: 1.45;">Analizando enfoque...</span>
         </div>
         
-        <!-- Botón con reset suave por software sin reloads de hardware -->
-        <button id="boton-reinicio">Volver a Escanear</button>
+        <!-- Nueva restauración por software interna sin reload de hardware -->
+        <button onclick="reestablecerPortal()">Volver a Escanear</button>
       </div>
     </div>
 
-    <!-- CARGAMOS EXCLUSIVAMENTE LA LIBRERÍA DE ESQUEMA MODULAR SEGURO -->
-    <script type="module">
-      import QrScanner from "https://jsdelivr.net";
-
+    <script>
       const video = document.getElementById('video-camara');
       const escena3D = document.getElementById('escena-3d');
       const mensaje = document.getElementById('mensaje-aliento');
@@ -134,9 +137,9 @@
       const textoEstado = document.getElementById('texto-estado');
       const textoInferior = document.getElementById('texto-inferior');
       const textoMision = document.getElementById('texto-mision');
-      const botonReinicio = document.getElementById('boton-reinicio');
       
       let escaneoActivo = true;
+      let detectorNativo;
 
       const misionesDiarias = [
         "Dedica 2 minutos a estirar los hombros y realizar respiraciones profundas.",
@@ -148,78 +151,94 @@
 
       const MI_URL_OFICIAL = window.location.href; 
 
-      // Inicialización limpia del motor unificado QrScanner
-      const qrScanner = new QrScanner(
-        video,
-        result => validarCodigo(result),
-        {
-          preferredCamera: 'environment',
-          highlightScanRegion: false,
-          highlightCodeOutline: false
-        }
-      );
+      if ('BarcodeDetector' in window) {
+        detectorNativo = new BarcodeDetector({ formats: ['qr_code'] });
+      } else {
+        alert("Tu navegador no soporta el motor nativo de escaneo. Inténtalo desde un celular con Chrome o Brave actualizado.");
+      }
 
-      // Encendemos la cámara una única vez
-      qrScanner.start().catch(err => console.error("Error de inicialización de cámara:", err));
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+      .then(conectarStream)
+      .catch(function() {
+        navigator.mediaDevices.getUserMedia({ video: true }).then(conectarStream);
+      });
 
-      function validarCodigo(result) {
+      function conectarStream(stream) {
+        video.srcObject = stream;
+        video.play();
+        video.addEventListener('loadedmetadata', function() {
+          if (detectorNativo) { bucleDeteccionNativa(); }
+        });
+      }
+
+      function bucleDeteccionNativa() {
         if (!escaneoActivo) return;
 
-        // Validamos el objeto de respuesta de la librería
-        const textoDecodificado = result.data ? result.data : result;
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+          detectorNativo.detect(video)
+          .then(barcodes => {
+            if (barcodes.length > 0 && escaneoActivo) {
+              
+              // Extraemos el valor del QR con tu método por hardware original
+              const contenidoQR = barcodes[0].rawValue;
+              
+              // VALIDACIÓN ESTRICTA: Solo reacciona si es tu QR de GitHub o Localhost
+              if (contenidoQR.includes("github.io") || contenidoQR === MI_URL_OFICIAL || contenidoQR.includes("localhost") || contenidoQR.includes("127.0.0.1")) {
+                escaneoActivo = false; 
 
-        // FILTRO DE SEGURIDAD ESTRICTO: Solo reacciona si el QR apunta a tu hosting de GitHub o local
-        if (textoDecodificado.includes("github.io") || textoDecodificado.includes("localhost") || textoDecodificado.includes("127.0.0.1") || textoDecodificado === MI_URL_OFICIAL) {
-          escaneoActivo = false; // Bloquea lecturas lógicas duplicadas en vivo
-          
-          // Asigna misión aleatoria
-          const indice = Math.floor(Math.random() * misionesDiarias.length);
-          textoMision.innerText = misionesDiarias[indice];
+                const indice = Math.floor(Math.random() * misionesDiarias.length);
+                textoMision.innerText = misionesDiarias[indice];
 
-          ejecutarTransicionMagica();
+                ejecutarTransicionMagica();
+              }
+            }
+          })
+          .catch(err => console.error(err));
         }
+
+        if (escaneoActivo) { requestAnimationFrame(bucleDeteccionNativa); }
       }
 
       function ejecutarTransicionMagica() {
         mira.classList.add('procesando-mira');
         laser.classList.add('procesando-laser');
         textoEstado.style.color = '#FF8D1A';
-        textoEstado.innerText = 'PROCESANDO ENERGÍA';
-        textoInferior.innerText = '⚡ Sincronizando vibras...';
+        textoEstado.innerText = 'SINCRO-ENERGÍA ACTIVA';
+        textoInferior.innerText = '⚡ Analizando código vital...';
+        textoInferior.style.background = 'rgba(255, 141, 26, 0.2)';
 
         setTimeout(() => {
           guia.style.opacity = '0';
           setTimeout(() => {
             guia.style.display = 'none';
             
-            // Mantenemos la cámara encendida detrás de la escena
-            escena3D.style.display = 'block';
-            setTimeout(() => {
-              mensaje.classList.add('mostrar-mensaje');
-            }, 50);
-          }, 400);
-        }, 1500);
-      }
+// REMOVIDO EL TRACK.STOP(): La cámara nativa se queda prendida detrás de la escena
+escena3D.style.display = 'block';
+setTimeout(() => {
+    mensaje.classList.add('mostrar-mensaje');
+}, 50);
+}, 400);
+}, 1500);
+}
 
-      // ACCIÓN DE REINICIO DE BUCLE (Atado de forma nativa dentro del módulo)
-      botonReinicio.addEventListener('click', () => {
-        // Desvanecemos la tarjeta hacia el fondo
-        mensaje.classList.remove('mostrar-mensaje');
-        
-        setTimeout(() => {
-escena3D.style.display = 'none';
+// RESTAURACIÓN INTERNA POR SOFTWARE (Mantiene el flujo de video intacto)
+window.reestablecerPortal = function() {
+    mensaje.classList.remove('mostrar-mensaje');
 
-// Restauramos interfaz verde original
-mira.classList.remove('procesando-mira');
-laser.classList.remove('procesando-laser');
-textoEstado.style.color = '#00ff96';
-textoEstado.innerText = 'MODO ESCÁNER ACTIVO';
-textoInferior.innerText = 'Apunta al QR físico para activar tu mensaje';
+    setTimeout(() => {
+        escena3D.style.display = 'none';
 
-guia.style.display = 'flex';
-setTimeout(() => { guia.style.opacity = '1'; }, 50);
+        mira.classList.remove('procesando-mira');
+        laser.classList.remove('procesando-laser');
+        textoEstado.style.color = '#00ff96';
+        textoEstado.innerText = 'MODO ESCÁNER ACTIVO';
+        textoInferior.style.background = 'rgba(0,0,0,0.7)';
+        textoInferior.innerText = 'Apunta al QR físico para activar tu mensaje';
 
-// Reactivamos la bandera lógica para permitir un nuevo escaneo físico directo
-escaneoActivo = true;
-}, 500);
-});
+        guia.style.display = 'flex';
+        setTimeout(() => { guia.style.opacity = '1'; }, 50);
+
+        // Reactivamos la bandera para permitir un nuevo escaneo físico directo
+        escaneoActivo = true;
+    }, 600);
+}
