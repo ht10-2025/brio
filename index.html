@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Portal AR - Mensaje Enriquecido ✨</title>
+    <title>Portal AR Tridimensional ✨</title>
     <style>
       html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; background-color: #000; }
       
@@ -19,6 +19,7 @@
       .cuadro-mira {
         width: 220px; height: 220px; border: 3px dashed #00ff96; border-radius: 20px;
         box-shadow: 0 0 15px rgba(0, 255, 150, 0.4); margin: auto; position: relative;
+        transition: all 0.3s ease;
       }
       #laser {
         content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
@@ -28,47 +29,57 @@
       .procesando-mira { border-color: #FF8D1A !important; box-shadow: 0 0 25px rgba(255, 141, 26, 0.6) !important; }
       .procesando-laser { background-color: #FF8D1A !important; box-shadow: 0 0 15px #FF8D1A !important; animation: procesar 0.3s infinite alternate !important; }
 
-      /* TARJETA CINEMÁTICA ENRIQUECIDA (Efecto Cristal Premium) */
-      #mensaje-aliento {
-        display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
-        background: linear-gradient(135deg, rgba(10, 25, 47, 0.95) 0%, rgba(20, 35, 60, 0.95) 100%);
-        backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-        border: 1px solid rgba(255, 255, 255, 0.1); padding: 35px 25px; border-radius: 32px; text-align: center;
-        width: 320px; box-sizing: border-box; box-shadow: 0 30px 60px rgba(0,0,0,0.8); z-index: 10;
-        opacity: 0;
-        transition: opacity 0.6s cubic-bezier(0.165, 0.84, 0.44, 1), transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      /* ESCENA TRIDIMENSIONAL (Estructura base para el 3D) */
+      #espacio-3d {
+        display: none; position: absolute; width: 100%; height: 100%;
+        perspective: 1000px; perspective-origin: center; z-index: 10;
       }
-      .mostrar-mensaje { display: block !important; opacity: 1 !important; transform: translate(-50%, -50%) scale(1) !important; }
-      
-      /* Animaciones de íconos */
-      .icono-contenedor { position: relative; width: 80px; height: 80px; margin: 0 auto 15px auto; }
-      .aura {
-        position: absolute; width: 100%; height: 100%; border-radius: 50%;
-        background: radial-gradient(circle, rgba(255,141,26,0.4) 0%, rgba(255,141,26,0) 70%);
-        animation: pulsar 2s infinite alternate; z-index: 1;
-      }
-      .emoji { font-size: 45px; line-height: 80px; position: relative; z-index: 2; display: inline-block; animation: flotarEmoji 3s infinite ease-in-out; }
 
-      /* Subcontenedor del consejo aleatorio */
-      .caja-consejo {
-        background: rgba(255, 255, 255, 0.05); border-left: 3px solid #FF8D1A;
-        padding: 12px; border-radius: 12px; margin-top: 20px; text-align: left;
-        box-sizing: border-box; animation: entradaSutil 1s ease-out 0.5s forwards; opacity: 0;
+      /* Contenedor del mensaje con rotación espacial real */
+      .tarjeta-3d {
+        position: absolute; top: 50%; left: 50%;
+        width: 320px; padding: 35px 25px; border-radius: 32px;
+        background: linear-gradient(135deg, rgba(10, 25, 47, 0.94) 0%, rgba(16, 42, 73, 0.94) 100%);
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+        box-sizing: border-box; text-align: center;
+        
+        /* Inicialización en el espacio 3D */
+        transform: translate(-50%, -50%) rotateX(45deg) translateZ(-200px);
+        transform-style: preserve-3d;
+        opacity: 0;
+        transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1), opacity 1s ease;
       }
+
+      /* Clase que activa la proyección hacia adelante (Efecto AR Holográfico) */
+      .proyectar-3d {
+        transform: translate(-50%, -50%) rotateX(0deg) translateZ(50px) !important;
+        opacity: 1 !important;
+      }
+
+      /* Título corregido para VS Code y navegadores */
+      .titulo-brillante {
+        font-size: 24px; margin: 0 0 15px 0; font-weight: 800; letter-spacing: 0.5px;
+        background: linear-gradient(45deg, #FFF, #FF8D1A);
+        -webkit-background-clip: text;
+        background-clip: text; /* Corrección para evitar el Warning en VS Code */
+        -webkit-text-fill-color: transparent;
+      }
+      
+      .icono-flotante { font-size: 50px; margin-bottom: 10px; display: inline-block; animation: flotar 3s infinite ease-in-out; }
+      .caja-mision { background: rgba(255, 255, 255, 0.05); border-left: 3px solid #FF8D1A; padding: 15px; border-radius: 14px; margin-top: 25px; text-align: left; box-sizing: border-box; }
 
       button {
         padding: 14px 28px; font-size: 15px; border: none; border-radius: 25px;
-        background: linear-gradient(45deg, #10252f, #1e3a47); color: #FF8D1A; font-weight: bold; 
-        cursor: pointer; margin-top: 25px; border: 1px solid rgba(255,141,26,0.3);
+        background: linear-gradient(45deg, #FF5733, #FF8D1A); color: white; font-weight: bold; 
+        cursor: pointer; margin-top: 25px; box-shadow: 0 5px 15px rgba(255,87,51,0.4);
         transition: all 0.2s ease; pointer-events: auto; width: 100%;
       }
-      button:active { transform: scale(0.97); background: rgba(255,141,26,0.1); }
-      
+
       @keyframes escanear { 0%, 100% { top: 0%; } 50% { top: 100%; } }
       @keyframes procesar { 0% { top: 20%; opacity: 0.4; } 100% { top: 80%; opacity: 1; } }
-      @keyframes pulsar { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.3); opacity: 1; } }
-      @keyframes flotarEmoji { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-      @keyframes entradaSutil { 100% { opacity: 1; transform: translateY(0); } }
+      @keyframes flotar { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-8px) scale(1.05); filter: drop-shadow(0 0 15px rgba(255,141,26,0.5)); } }
     </style>
   </head>
   <body>
@@ -85,32 +96,29 @@
       </p>
     </div>
 
-    <!-- TARJETA PREMIUM ENRIQUECIDA -->
-    <div id="mensaje-aliento">
-      <div class="icono-contenedor">
-        <div class="aura"></div>
-        <div class="emoji">✨</div>
-      </div>
-      
-      <h2 style="font-size: 22px; margin: 0 0 12px 0; background: linear-gradient(45deg, #FFF, #FF8D1A); -webkit-background-clip-: text; -webkit-text-fill-color: transparent; font-weight: 800; letter-spacing: 0.5px;">Sintonía Completada</h2>
-      
-      <!-- Mensaje Psicológico Profundo -->
-      <p style="font-size: 14px; line-height: 1.6; margin: 0; color: #e2e8f0; font-weight: 400;">
-        A veces el día avanza tan rápido que olvidamos detenernos. Respira. Estás haciendo un esfuerzo enorme y cada pequeño paso cuenta. Tu dedicación es valiosa y tu potencial es único. Confía en tu proceso.
-      </p>
-      
-      <!-- Caja de Consejo Dinámico Dinámica -->
-      <div class="caja-consejo">
-        <strong style="color: #FF8D1A; font-size: 11px; display: block; margin-bottom: 3px; letter-spacing: 0.5px; text-transform: uppercase;">Misión de Bienestar</strong>
-        <span id="texto-consejo" style="color: #cbd5e1; font-size: 13px; line-height: 1.4;">Cargando enfoque...</span>
-      </div>
+    <!-- ESCENA CON PERSPECTIVA TRIDIMENSIONAL -->
+    <div id="espacio-3d">
+      <div id="tarjeta" class="tarjeta-3d">
+        <div class="icono-flotante">✨🛸✨</div>
+        <h2 class="titulo-brillante">¡Sintonía Exitosa!</h2>
+        
+        <p style="font-size: 14.5px; line-height: 1.6; margin: 0; color: #e2e8f0; font-weight: 400;">
+          A veces el ritmo diario nos desconecta de lo importante. Detente un segundo y reconoce el camino avanzado. Tu esfuerzo es valioso, tus intenciones importan y tu potencial sigue intacto. Confía en lo que estás construyendo paso a paso.
+        </p>
+        
+        <div class="caja-mision">
+          <strong style="color: #FF8D1A; font-size: 11px; display: block; margin-bottom: 5px; letter-spacing: 0.5px; text-transform: uppercase;">Misión de Enfoque</strong>
+          <span id="texto-consejo" style="color: #cbd5e1; font-size: 13.5px; line-height: 1.45;">Cargando...</span>
+        </div>
 
-      <button onclick="window.location.reload()">Cerrar Portal</button>
+        <button onclick="window.location.reload()">Cerrar Portal</button>
+      </div>
     </div>
 
     <script>
       const video = document.getElementById('video-camara');
-      const mensaje = document.getElementById('mensaje-aliento');
+      const espacio3D = document.getElementById('espacio-3d');
+      const tarjeta = document.getElementById('tarjeta');
       const guia = document.getElementById('guia-escaneo');
       const mira = document.getElementById('mira');
       const laser = document.getElementById('laser');
@@ -121,16 +129,13 @@
       let escaneoActivo = true;
       let detectorNativo;
 
-      // BANCO DE CONSEJOS DINÁMICOS ALEATORIOS
       const misionesBienestar = [
-        "Dedica 2 minutos a estirar tus hombros y respirar hondo. Tu cuerpo te lo agradecerá.",
-        "Piensa en tres cosas pequeñas por las que estés agradecido en este momento de tu día.",
-        "Regálate una pausa, toma un vaso con agua y aborda el siguiente reto con calma.",
-        "Desconéctate por 5 minutos de las tareas complejas. Un descanso corto multiplica tu enfoque.",
-        "Reconoce tu esfuerzo de hoy. Has resuelto retos difíciles y eso demuestra tu valía."
+        "Dedica 2 minutos a relajar los hombros y respirar hondo de forma consciente.",
+        "Identifica tres detalles sencillos por los que sientas gratitud en este momento.",
+        "Haz una pausa de dos minutos para tomar agua y abordar el siguiente reto con calma.",
+        "Aléjate de las pantallas 3 minutos; un descanso corto reinicia tu claridad mental.",
+        "Reconoce tu avance de hoy. Has gestionado situaciones complejas y eso cuenta mucho."
       ];
-
-      const MI_URL_OFICIAL = window.location.href; 
 
       if ('BarcodeDetector' in window) {
         detectorNativo = new BarcodeDetector({ formats: ['qr_code'] });
@@ -157,12 +162,13 @@
           detectorNativo.detect(video)
           .then(barcodes => {
             if (barcodes.length > 0 && escaneoActivo) {
-              const contenidoQR = barcodes.rawValue;
               
-              if (contenidoQR.includes("github.io") || contenidoQR === MI_URL_OFICIAL) {
+              // 🚨 EXPLICACIÓN DE POR QUÉ DEJA DE ESCANEAR:
+              // Para que se active de forma infalible con tu QR, eliminamos restricciones estrictas de strings
+              // y obligamos al detector a validar que el código contenga texto real
+              if (barcodes[0].rawValue.length > 0) {
                 escaneoActivo = false; 
-                
-                // Antes de abrir el mensaje, seleccionamos una misión aleatoria
+
                 const indiceAleatorio = Math.floor(Math.random() * misionesBienestar.length);
                 textoConsejo.innerText = misionesBienestar[indiceAleatorio];
 
@@ -179,16 +185,24 @@
         mira.classList.add('procesando-mira');
         laser.classList.add('procesando-laser');
         textoEstado.style.color = '#FF8D1A';
-        textoEstado.innerText = 'PROCESANDO VIBRAS';
+        textoEstado.innerText = 'PROCESANDO ENERGÍA';
         textoInferior.innerText = '⚡ Sincronizando frecuencia vital...';
 
         setTimeout(() => {
           guia.style.opacity = '0';
           setTimeout(() => {
             guia.style.display = 'none';
+            
+            // Apagamos la cámara de fondo
             const stream = video.srcObject;
             if (stream) stream.getTracks().forEach(track => track.stop());
-            mensaje.classList.add('mostrar-mensaje');
+            
+            // ACTIVAMOS LA PROYECCIÓN TRIDIMENSIONAL DESDE EL FONDO HACIA ADELANTE
+            espacio3D.style.display = 'block';
+            setTimeout(() => {
+              tarjeta.classList.add('proyectar-3d');
+            }, 50);
+
           }, 400);
         }, 1500);
       }
