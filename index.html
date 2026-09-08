@@ -31,20 +31,20 @@
       .procesando-mira { border-color: #FF8D1A !important; box-shadow: 0 0 25px rgba(255, 141, 26, 0.6) !important; }
       .procesando-laser { background-color: #FF8D1A !important; box-shadow: 0 0 15px #FF8D1A !important; animation: procesar 0.3s infinite alternate !important; }
 
-      /* CONTENEDOR 3D (Perspectiva para el holograma) */
-      #escena-holograma {
+      /* ESCENA QUE DA PERSPECTIVA AL EFECTO 3D */
+      #escena-3d {
         display: none; position: absolute; width: 100%; height: 100%;
         perspective: 1200px; perspective-origin: center; z-index: 10;
-        background: rgba(0, 0, 0, 0.4); /* Filtro oscuro sutil sobre el video */
+        background: rgba(0, 0, 0, 0.4); /* Sombreado sutil sobre el video */
       }
 
-      /* TARJETA MEJORADA CON EFECTO CRISTAL Y PERSPECTIVA 3D TRIDIMENSIONAL */
+      /* TARJETA MEJORADA CON EFECTO CRISTAL Y PERSPECTIVA TRIDIMENSIONAL */
       #mensaje-aliento {
         position: absolute; top: 50%; left: 50%; 
-        background: linear-gradient(135deg, rgba(10, 25, 47, 0.96) 0%, rgba(20, 42, 63, 0.96) 100%);
+        background: linear-gradient(135deg, rgba(15, 32, 39, 0.96) 0%, rgba(32, 58, 67, 0.96) 100%);
         backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-        border: 1px solid rgba(255, 255, 255, 0.15); padding: 35px 25px; border-radius: 32px; text-align: center;
-        width: 325px; box-sizing: border-box; box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+        border: 1px solid rgba(255, 255, 255, 0.15); padding: 35px 25px; border-radius: 30px; text-align: center;
+        width: 320px; box-sizing: border-box; box-shadow: 0 20px 50px rgba(0,0,0,0.7);
         
         /* Ajuste espacial inicial (Inclinada y al fondo) */
         transform: translate(-50%, -50%) rotateX(35deg) translateZ(-150px);
@@ -59,14 +59,14 @@
         transform: translate(-50%, -50%) rotateX(0deg) translateZ(50px) !important; 
       }
       
-      /* Elemento animado dinámico */
+      /* Elemento animado dinámico dentro de la tarjeta */
       .icono-animado {
         font-size: 45px; margin-bottom: 5px; display: inline-block;
         animation: latido 1.5s infinite alternate cubic-bezier(0.215, 0.610, 0.355, 1);
       }
 
       /* Título corregido: Soluciona la advertencia de VS Code */
-      .titulo-holograma {
+      .titulo-brillante {
         font-size: 24px; margin: 5px 0 15px 0; font-weight: 800;
         background: linear-gradient(45deg, #FFF, #FF8D1A);
         -webkit-background-clip: text;
@@ -81,12 +81,12 @@
       }
 
       button {
-        padding: 14px 28px; font-size: 15px; border: none; border-radius: 25px;
+        padding: 14px 28px; font-size: 16px; border: none; border-radius: 25px;
         background: linear-gradient(45deg, #FF5733, #FF8D1A); color: white; font-weight: bold; 
         cursor: pointer; margin-top: 25px; box-shadow: 0 5px 15px rgba(255,87,51,0.4);
         transition: all 0.2s ease; pointer-events: auto; width: 100%;
       }
-      button:active { transform: scale(0.97); }
+      button:active { transform: scale(0.97); box-shadow: 0 2px 5px rgba(255,87,51,0.2); }
       
       @keyframes escanear { 0%, 100% { top: 0%; } 50% { top: 100%; } }
       @keyframes procesar { 0% { top: 20%; opacity: 0.4; } 100% { top: 80%; opacity: 1; } }
@@ -95,7 +95,7 @@
   </head>
   <body>
 
-    <!-- El video corre continuamente de fondo sin interrupciones -->
+    <!-- Tu video en vivo original corriendo continuamente de fondo -->
     <video id="video-camara" autoplay playsinline muted></video>
 
     <div id="guia-escaneo">
@@ -108,13 +108,13 @@
       </p>
     </div>
 
-    <!-- ESCENA QUE ENCAPSULA EL EFECTO 3D -->
-    <div id="escena-holograma">
+    <!-- ESCENA QUE ENCAPSULA EL EFECTO 3D REAL -->
+    <div id="escena-3d">
       <div id="mensaje-aliento">
         <div class="icono-animado">✨🛸✨</div>
-        <h2 class="titulo-holograma">¡Sintonía Exitosa!</h2>
+        <h2 class="titulo-brillante">¡Sintonía Exitosa!</h2>
         
-        <!-- Mensaje extendido y nutritivo -->
+        <!-- Mensaje extendido, reflexivo y nutritivo -->
         <p style="font-size: 14.5px; line-height: 1.6; margin: 0; color: #e2e8f0; font-weight: 400;">
           A veces el ritmo del día avanza tan rápido que olvidamos detenernos a asimilar el camino recorrido. Respira hondo. Estás gestionando tus responsabilidades con gran dedicación y cada pequeño esfuerzo diario es valioso. Confía en tu proceso y avanza a tu propio tiempo.
         </p>
@@ -125,14 +125,15 @@
           <span id="texto-mision" style="color: #cbd5e1; font-size: 13.5px; line-height: 1.45;">Analizando enfoque...</span>
         </div>
         
-        <!-- Botón con restauración por software (Sin apagar la cámara) -->
+        <!-- Botón con restauración interna fluida (Sin reloads de página molestos) -->
         <button onclick="reestablecerPortal()">Volver a Escanear</button>
       </div>
     </div>
 
     <script>
+      // Regresamos al 100% de TU estructura nativa original limpia y validada
       const video = document.getElementById('video-camara');
-      const escenaHolograma = document.getElementById('escena-holograma');
+      const escena3D = document.getElementById('escena-3d');
       const mensaje = document.getElementById('mensaje-aliento');
       const guia = document.getElementById('guia-escaneo');
       const mira = document.getElementById('mira');
@@ -182,16 +183,20 @@
           detectorNativo.detect(video)
           .then(barcodes => {
             if (barcodes.length > 0 && escaneoActivo) {
+              
+              // TU LÍNEA DE CÓDIGO EXACTA ORIGINAL (Recuperada y protegida)
               const contenidoQR = barcodes[0].rawValue;
               
               if (contenidoQR.includes("github.io") || contenidoQR === MI_URL_OFICIAL || contenidoQR.includes("localhost") || contenidoQR.includes("127.0.0.1")) {
-                escaneoActivo = false; // Bloquea lecturas secundarias lógicas
+                escaneoActivo = false; // Detiene lecturas lógicas duplicadas
                 
-                // Inyectamos una misión de aliento aleatoria cada vez que lee el QR
+                // Inyectamos una misión aleatoria cada vez que lee tu QR
                 const indice = Math.floor(Math.random() * misionesDiarias.length);
                 textoMision.innerText = misionesDiarias[indice];
 
                 ejecutarTransicionMagica();
+              } else {
+                console.log("QR ignorado por no ser el oficial del Portal.");
               }
             }
           })
@@ -204,45 +209,45 @@
       function ejecutarTransicionMagica() {
         mira.classList.add('procesando-mira');
         laser.classList.add('procesando-laser');
-        textoEstado.style.color = '#FF8D1A';
-        textoEstado.innerText = 'PROCESANDO ENERGÍA';
-        textoInferior.innerText = '⚡ Sincronizando vibras...';
+textoEstado.style.color = '#FF8D1A';
+textoEstado.innerText = 'PROCESANDO ENERGÍA';
+textoInferior.innerText = '⚡ Sincronizando vibras...';
 
-        setTimeout(() => {
-          guia.style.opacity = '0';
-          setTimeout(() => {
-            guia.style.display = 'none';
-            
-// ELIMINADO EL TRACK.STOP: La cámara se queda encendida de fondo permanentemente
-escenaHolograma.style.display = 'block';
 setTimeout(() => {
-    mensaje.classList.add('mostrar-mensaje');
+    guia.style.opacity = '0';
+    setTimeout(() => {
+        guia.style.display = 'none';
+
+    // CORRECCIÓN CLAVE: Removido el track.stop() para mantener la cámara encendida detrás
+    escena3D.style.display = 'block';
+    setTimeout(() => {
+        mensaje.classList.add('mostrar-mensaje');
     }, 50);
-    }, 400);
+}, 400);
 }, 1500);
 }
 
-// NUEVO RESTABLECIMIENTO EXCLUSIVO POR SOFTWARE (Mantiene la cámara encendida)
+// REESTABLECIMIENTO EXCLUSIVO POR SOFTWARE INTERNO (Fluido y sin apagar el video)
 window.reestablecerPortal = function() {
-    // 1. Regresa la tarjeta en 3D al fondo suavemente
+    // Desvanecemos la tarjeta 3D hacia el fondo
     mensaje.classList.remove('mostrar-mensaje');
 
     setTimeout(() => {
-        escenaHolograma.style.display = 'none';
+        escena3D.style.display = 'none';
 
-        // 2. Limpia los colores de la mira regresándolos a verde
+        // Limpia los colores de la mira regresándolos a verde
         mira.classList.remove('procesando-mira');
         laser.classList.remove('procesando-laser');
         textoEstado.style.color = '#00ff96';
         textoEstado.innerText = 'MODO ESCÁNER ACTIVO';
         textoInferior.innerText = 'Apunta al QR físico para activar tu mensaje';
 
-        // 3. Reactiva la guía visual
+        // Reactiva la guía visual verde original
         guia.style.display = 'flex';
         setTimeout(() => { guia.style.opacity = '1'; }, 50);
 
-        // 4. Reactiva el bucle lógico del escáner y los fotogramas
+        // Reactiva el switch lógico para leer los fotogramas del QR otra vez
         escaneoActivo = true;
         requestAnimationFrame(bucleDeteccionNativa);
-        }, 600); // Espera que termine el desvanecido físico de la tarjeta
-        }
+    }, 600); // Espera que termine la transición física de salida
+    }
