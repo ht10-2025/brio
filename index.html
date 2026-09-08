@@ -38,7 +38,7 @@
         background: rgba(0, 0, 0, 0.4); /* Sombreado sutil sobre el video */
       }
 
-      /* TARJETA MEJORADA CON PERSPECTIVA TRIDIMENSIONAL */
+      /* TARJETA MEJORADA CON PERSPECTIVA TRIDIMENSIONAL EN EL ESPACIO */
       #mensaje-aliento {
         position: absolute; top: 50%; left: 50%; 
         background: linear-gradient(135deg, rgba(15, 32, 39, 0.96) 0%, rgba(32, 58, 67, 0.96) 100%);
@@ -161,7 +161,7 @@
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
           detectorNativo.detect(video)
           .then(barcodes => {
-            // CORRECCIÓN CLAVE: Extraemos la posición [0] de la matriz para evitar que JavaScript se rompa
+            // CORRECCIÓN DEFINITIVA: Validamos la longitud y accedemos al índice [0] de la matriz nativa
             if (barcodes && barcodes.length > 0 && escaneoActivo) {
               
               const contenidoQR = barcodes[0].rawValue; 
@@ -214,8 +214,12 @@
           textoInferior.innerText = 'Apunta al QR físico para activar tu mensaje';
           
           guia.style.display = 'flex';
-          setTimeout(() => { guia.style.opacity = '1'; }, 50);
-escaneoActivo = true;
-requestAnimationFrame(bucleDeteccionNativa);
-}, 600);
-}
+
+          setTimeout(() => { guia.style.opacity = '1';
+
+           }, 50);
+           
+           escaneoActivo = true;
+           requestAnimationFrame(bucleDeteccionNativa);
+        }, 600);
+    }
