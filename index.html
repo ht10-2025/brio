@@ -31,14 +31,14 @@
       .procesando-mira { border-color: #FF8D1A !important; box-shadow: 0 0 25px rgba(255, 141, 26, 0.6) !important; }
       .procesando-laser { background-color: #FF8D1A !important; box-shadow: 0 0 15px #FF8D1A !important; animation: procesar 0.3s infinite alternate !important; }
 
-      /* ESCENA CON PERSPECTIVA TRIDIMENSIONAL HOLOGRÁFICA */
+      /* CONTENEDOR DE PERSPECTIVA 3D FUTURA */
       #escena-3d {
         display: none; position: absolute; width: 100%; height: 100%;
         perspective: 1200px; perspective-origin: center; z-index: 10;
-        background: rgba(0, 0, 0, 0.4); /* Filtro oscuro sobre el video de fondo */
+        background: rgba(0, 0, 0, 0.4); /* Sombreado sutil sobre el video */
       }
 
-      /* TARJETA MEJORADA CON EFECTO CRISTAL Y PERSPECTIVA ESPACIAL */
+      /* TARJETA MEJORADA CON PERSPECTIVA TRIDIMENSIONAL EN EL ESPACIO */
       #mensaje-aliento {
         position: absolute; top: 50%; left: 50%; 
         background: linear-gradient(135deg, rgba(15, 32, 39, 0.96) 0%, rgba(32, 58, 67, 0.96) 100%);
@@ -57,24 +57,18 @@
         transform: translate(-50%, -50%) rotateX(0deg) translateZ(50px) !important; 
       }
       
-      .icono-animado {
-        font-size: 50px; margin-bottom: 10px; display: inline-block;
-        animation: latido 1.2s infinite alternate cubic-bezier(0.215, 0.610, 0.355, 1);
-      }
+      .icono-animado { font-size: 45px; margin-bottom: 5px; display: inline-block; animation: latido 1.5s infinite alternate cubic-bezier(0.215, 0.610, 0.355, 1); }
 
+      /* Título en degradado corregido para evitar Warnings en VS Code */
       .titulo-brillante {
-        font-size: 24px; margin: 10px 0 5px 0; font-weight: 800;
+        font-size: 24px; margin: 5px 0 15px 0; font-weight: 800;
         background: linear-gradient(45deg, #FFF, #FF8D1A);
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
       }
 
-      /* Subcontenedor del consejo aleatorio */
-      .caja-mision {
-        background: rgba(255, 255, 255, 0.05); border-left: 3px solid #FF8D1A;
-        padding: 14px; border-radius: 12px; margin-top: 20px; text-align: left; box-sizing: border-box;
-      }
+      .caja-mision { background: rgba(255, 255, 255, 0.05); border-left: 3px solid #FF8D1A; padding: 14px; border-radius: 12px; margin-top: 25px; text-align: left; box-sizing: border-box; }
 
       button {
         padding: 14px 28px; font-size: 16px; border: none; border-radius: 25px;
@@ -86,25 +80,25 @@
       
       @keyframes escanear { 0%, 100% { top: 0%; } 50% { top: 100%; } }
       @keyframes procesar { 0% { top: 20%; opacity: 0.4; } 100% { top: 80%; opacity: 1; } }
-      @keyframes latido { 0% { transform: scale(0.9); filter: drop-shadow(0 0 2px rgba(255,255,255,0.2)); } 100% { transform: scale(1.1); filter: drop-shadow(0 0 15px rgba(255,141,26,0.6)); } }
+      @keyframes latido { 0% { transform: scale(0.92); } 100% { transform: scale(1.08); } }
     </style>
   </head>
   <body>
 
-    <!-- Video continuo por hardware -->
+    <!-- Video en vivo original por hardware -->
     <video id="video-camara" autoplay playsinline muted></video>
 
     <div id="guia-escaneo">
-      <h2 id="texto-estado" style="margin: 0; font-size: 18px; color: #00ff96; text-shadow: 0 2px 4px #000; letter-spacing: 1px;">MODO ESCÁNER ACTIVO</h2>
+      <h2 id="texto-estado" style="margin: 0; font-size: 18px; color: #00ff96; text-shadow: 0 2px 4px #000; letter-spacing: 1px; transition: color 0.3s;">MODO ESCÁNER ACTIVO</h2>
       <div class="cuadro-mira" id="mira">
         <div id="laser"></div>
       </div>
-      <p id="texto-inferior" style="font-size: 14px; color: #fff; background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 20px; font-weight: bold; text-shadow: 0 1px 2px #000;">
+      <p id="texto-inferior" style="font-size: 14px; color: #fff; background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 20px; font-weight: bold; text-shadow: 0 1px 2px #000; transition: all 0.3s;">
         Apunta al QR físico para activar tu mensaje
       </p>
     </div>
 
-    <!-- ESCENA TRIDIMENSIONAL QUE ENCAPSULA LA TARJETA -->
+    <!-- ESCENA 3D HOLOGRÁFICA -->
     <div id="escena-3d">
       <div id="mensaje-aliento">
         <div class="icono-animado">✨🛸✨</div>
@@ -112,13 +106,10 @@
         <p style="font-size: 14.5px; line-height: 1.6; margin: 0; color: #e2e8f0; font-weight: 400;">
           A veces el ritmo del día avanza tan rápido que olvidamos detenernos a asimilar el camino recorrido. Respira hondo. Estás gestionando tus responsabilidades con gran dedicación y cada pequeño esfuerzo diario es valioso. Confía en tu proceso y avanza a tu propio tiempo.
         </p>
-        
         <div class="caja-mision">
           <strong style="color: #FF8D1A; font-size: 11px; display: block; margin-bottom: 5px; letter-spacing: 0.5px; text-transform: uppercase;">Misión de Bienestar</strong>
           <span id="texto-mision" style="color: #cbd5e1; font-size: 13.5px; line-height: 1.45;">Analizando enfoque...</span>
         </div>
-
-        <!-- Botón corregido con reset lógico continuo sin recargar hardware -->
         <button onclick="reestablecerPortal()">Volver a Escanear</button>
       </div>
     </div>
@@ -138,7 +129,7 @@
       let detectorNativo;
 
       const misionesDiarias = [
-        "Dedica 2 minutes a estirar los hombros y realizar respiraciones profundas.",
+        "Dedica 2 minutos a estirar los hombros y realizar respiraciones profundas.",
         "Piensa en tres detalles sencillos por los que sientas gratitud en este momento.",
         "Regálate una pausa corta, toma un vaso con agua y retoma tus tareas con calma.",
         "Aléjate de las pantallas por 3 minutos para restaurar tu claridad y enfoque mental.",
@@ -155,13 +146,8 @@
 
       navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
       .then(conectarStream)
-      .catch(function(err) {
-        // Plan de respaldo si falla la cámara trasera
-        navigator.mediaDevices.getUserMedia({ video: true })
-        .then(conectarStream)
-        .catch(function() {
-          alert("Permiso de cámara denegado. Haz clic en el candado de la URL para desbloquearlo.");
-        });
+      .catch(function() {
+        navigator.mediaDevices.getUserMedia({ video: true }).then(conectarStream);
       });
 
       function conectarStream(stream) {
@@ -178,15 +164,15 @@
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
           detectorNativo.detect(video)
           .then(barcodes => {
+            // COMPROBACIÓN DE MATRIZ PERFECTA: Tu código base exacto e infalible
             if (barcodes && barcodes.length > 0 && escaneoActivo) {
               
-              // Extraemos el valor usando tu sintaxis de matriz original impecable
-              const contenidoQR = barcodes[0].rawValue;
+              // TU EXTRACTOR NATIVO PROTEGIDO (Soluciona la pantalla negra)
+              const contenidoQR = barcodes[0].rawValue; 
               
               if (contenidoQR.includes("github.io") || contenidoQR === MI_URL_OFICIAL || contenidoQR.includes("localhost") || contenidoQR.includes("127.0.0.1")) {
                 escaneoActivo = false; 
-                
-                // Inyecta una misión aleatoria potente
+
                 const indice = Math.floor(Math.random() * misionesDiarias.length);
                 textoMision.innerText = misionesDiarias[indice];
 
@@ -211,34 +197,34 @@
           guia.style.opacity = '0';
           setTimeout(() => {
             guia.style.display = 'none';
-            
-            // LA CÁMARA NO SE APAGA: Se queda corriendo de fondo dándole un look AR real
             escena3D.style.display = 'block';
             setTimeout(() => {
-mensaje.classList.add('mostrar-mensaje');
-}, 50);
-}, 400);
-}, 1500);
-}
+              mensaje.classList.add('mostrar-mensaje');
+            }, 50);
+          }, 400);
+        }, 1500);
+      }
 
-// RESTAURACIÓN INTEGRAL POR SOFTWARE (Mantiene el canal de video intacto)
-window.reestablecerPortal = function() {
-    mensaje.classList.remove('mostrar-mensaje');
+      // RESTAURACIÓN INTERNA POR SOFTWARE (Mantiene el flujo de video al 100%)
+      window.reestablecerPortal = function() {
+        mensaje.classList.remove('mostrar-mensaje');
+        
+        setTimeout(() => {
+          escena3D.style.display = 'none';
+          mira.classList.remove('procesando-mira');
+          laser.classList.remove('procesando-laser');
+textoEstado.style.color = '#00ff96';
+textoEstado.innerText = 'MODO ESCÁNER ACTIVO';
+textoInferior.style.background = 'rgba(0,0,0,0.7)';
+textoInferior.innerText = 'Apunta al QR físico para activar tu mensaje';
+
+guia.style.display = 'flex';
+setTimeout(() => { 
     
-    setTimeout(() => {
-        escena3D.style.display = 'none';
-
-        mira.classList.remove('procesando-mira');
-        laser.classList.remove('procesando-laser');
-        textoEstado.style.color = '#00ff96';
-        textoEstado.innerText = 'MODO ESCÁNER ACTIVO';
-        textoInferior.innerText = 'Apunta al QR físico para activar tu mensaje';
-
-        guia.style.display = 'flex';
-        setTimeout(() => { guia.style.opacity = '1'; }, 50);
-
-        // Activamos la bandera lógica para leer de nuevo el QR inmediatamente
-        escaneoActivo = true;
-        requestAnimationFrame(bucleDeteccionNativa);
-    }, 600);
+    guia.style.opacity = '1';
+ }, 50);
+ 
+ escaneoActivo = true;
+ requestAnimationFrame(bucleDeteccionNativa);
+}, 600);
 }
