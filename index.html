@@ -5,15 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Portal AR Inicial ✨</title>
     
-    <!-- CDN alternativo ultra estable para lectura de QR -->
-    <script src="https://unpkg.com"></script>
+    <!-- Cargamos jsQR desde un CDN confiable de código abierto -->
+    <script src="https://jsdelivr.net"></script>
     
     <style>
       html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; background-color: #000; }
       #video-camara { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
       #canvas-oculto { display: none; }
 
-      /* Capa de guía visual */
       #guia-escaneo {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         display: flex; flex-direction: column; justify-content: space-between; align-items: center;
@@ -24,10 +23,9 @@
         box-shadow: 0 0 15px rgba(0, 255, 150, 0.4); margin: auto;
       }
 
-      /* Mensaje sorpresa flotante */
       #mensaje-aliento {
         display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        background: rgba(15, 32, 39, 0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        background: rgba(15, 32, 39, 0.94); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
         border: 2px solid #FF8D1A; padding: 30px 20px; border-radius: 24px; text-align: center;
         width: 280px; box-sizing: border-box; box-shadow: 0 15px 35px rgba(0,0,0,0.6); z-index: 10;
       }
@@ -48,7 +46,6 @@
       </p>
     </div>
 
-    <!-- El Mensaje Oculto -->
     <div id="mensaje-aliento">
       <span style="font-size: 32px;">✨</span>
       <h2 style="font-size: 22px; margin: 10px 0; color: #FF8D1A;">¡Validación Correcta!</h2>
@@ -66,40 +63,44 @@
       const guia = document.getElementById('guia-escaneo');
       let escaneoActivo = true;
 
-      // Configuración de permisos flexible (Compatible con escudos de Brave y Chrome)
-      const opcionesCamara = { video: { facingMode: "environment" } };
-
-      navigator.mediaDevices.getUserMedia(opcionesCamara)
-      .then(inicializarVideo)
-      .catch(function(err) {
-        // Plan B automático si Brave bloquea la petición estricta "environment"
+      // Intentamos primero la cámara trasera (para celulares)
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+      .then(conectarStream)
+      .catch(function() {
+        // Si falla (como en PC que no hay cámara trasera), usa cualquier cámara disponible
         navigator.mediaDevices.getUserMedia({ video: true })
-        .then(inicializarVideo)
-        .catch(function(e) {
-          alert("Error crítico al acceder a la cámara. Revisa los permisos de tu navegador.");
+        .then(conectarStream)
+        .catch(function() {
+          alert("Asegúrate de dar permisos de cámara en tu navegador.");
         });
       });
 
-      function inicializarVideo(stream) {
+      function conectarStream(stream) {
         video.srcObject = stream;
-        video.setAttribute("playsinline", true); // Vital para iOS/Brave móvil
+        video.setAttribute("playsinline", true);
         video.play();
-        requestAnimationFrame(bucleEscaneo);
+        
+        // CRUCIAL: Esperamos a que el video tenga dimensiones reales antes de escanear
+        video.addEventListener('loadedmetadata', function() {
+          requestAnimationFrame(bucleEscaneo);
+        });
       }
 
       function bucleEscaneo() {
         if (!escaneoActivo) return;
 
-        // Forzamos la sincronización de fotogramas verificando los datos internos del video
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
-          // Ajustamos dinámicamente el lienzo al tamaño real capturado
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
+          // Optimizamos bajando la resolución interna del canvas para que procese rápido en móviles
+          const anchoProcesado = video.videoWidth / 1.5;
+          const altoProcesado = video.videoHeight / 1.5;
           
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          canvas.width = anchoProcesado;
+          canvas.height = altoProcesado;
           
-          // Ejecutamos la lectura exacta del código QR sobre los píxeles reales
+          ctx.drawImage(video, 0, 0, anchoProcesado, altoProcesado);
+          const imageData = ctx.getImageData(0, 0, anchoProcesado, altoProcesado);
+          
+          // Ejecuta jsQR sobre los píxeles optimizados
           const codigoQR = jsQR(imageData.data, imageData.width, imageData.height, {
             inversionAttempts: "dontInvert"
           });
@@ -108,10 +109,9 @@
             escaneoActivo = false;
             guia.style.display = 'none';
             mensaje.classList.add('mostrar-mensaje');
-            return; // Rompe el ciclo con éxito
+            return;
           }
         }
-        // Ejecuta el siguiente fotograma a máxima velocidad nativa del móvil
         requestAnimationFrame(bucleEscaneo);
       }
     </script>
