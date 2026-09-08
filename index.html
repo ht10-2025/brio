@@ -5,17 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Portal AR Inicial ✨</title>
     
-    <!-- Cargamos la librería líder para escaneo de video en tiempo real -->
-    <script src="https://unpkg.com" type="text/javascript"></script>
+    <!-- Cambiado a CDNJSL para evadir el bloqueo de los escudos de Brave y Chrome -->
+    <script src="https://cloudflare.com"></script>
     
     <style>
       html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; background-color: #000; }
       
-      /* Contenedor donde se renderizará el video nativo */
+      /* Contenedor adaptativo de video */
       #lector-qr { width: 100% !important; height: 100% !important; position: fixed; top: 0; left: 0; object-fit: cover; z-index: 1; }
       #lector-qr video { width: 100% !important; height: 100% !important; object-fit: cover !important; }
 
-      /* Capa de guía visual */
+      /* Interfaz guía visual */
       #guia-escaneo {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         display: flex; flex-direction: column; justify-content: space-between; align-items: center;
@@ -39,7 +39,6 @@
   </head>
   <body>
 
-    <!-- El motor inyectará el video directamente en este bloque -->
     <div id="lector-qr"></div>
 
     <div id="guia-escaneo">
@@ -64,41 +63,38 @@
       const mensaje = document.getElementById('mensaje-aliento');
       const guia = document.getElementById('guia-escaneo');
 
-      // Inicializamos el lector configurando un tamaño de cuadro de escaneo (fps óptimos)
-      const html5QrcodeScanner = new Html5Qrcode("lector-qr");
+      // Verificación de seguridad por si tarda en instanciarse
+      if (typeof Html5Qrcode !== 'undefined') {
+        const html5QrcodeScanner = new Html5Qrcode("lector-qr");
 
-      // Intentamos encender la cámara de forma fluida
-      Html5Qrcode.getCameras().then(cameras => {
-        if (cameras && cameras.length > 0) {
-          // Si es celular detecta la cámara trasera automáticamente, si es PC usa la predeterminada
-          let cameraId = cameras[0].id;
-          if(cameras.length > 1) {
-            // Busca la cámara trasera ("back" o "environment") en dispositivos móviles
-            const trasera = cameras.find(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('environment'));
-            if(trasera) cameraId = trasera.id;
+        Html5Qrcode.getCameras().then(cameras => {
+          if (cameras && cameras.length > 0) {
+            let cameraId = cameras[0].id;
+            if(cameras.length > 1) {
+              const trasera = cameras.find(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('environment'));
+              if(trasera) cameraId = trasera.id;
+            }
+
+            html5QrcodeScanner.start(
+              cameraId, 
+              { fps: 24, qrbox: { width: 250, height: 250 } },
+              onScanSuccess
+            ).catch(err => { console.error("Error al iniciar cámara", err); });
           }
+        }).catch(err => { console.error("Error en lista de cámaras", err); });
+      } else {
+        alert("Cargando componentes del escáner... Por favor refresca la página.");
+      }
 
-          // Arranca el flujo de video a 24 cuadros por segundo (Carga inmediata)
-          html5QrcodeScanner.start(
-            cameraId, 
-            { fps: 24, qrbox: { width: 250, height: 250 } },
-            onScanSuccess
-          ).catch(err => {
-            console.error("Error al iniciar flujo", err);
-          });
-        }
-      }).catch(err => {
-        alert("Asegúrate de otorgar permisos de cámara en tu navegador.");
-      });
-
-      // Esta función se activa en el milisegundo exacto en que detecta CUALQUIER código QR
       function onScanSuccess(decodedText, decodedResult) {
-        // Detenemos la cámara de inmediato para ahorrar batería e impedir lecturas dobles
+        const html5QrcodeScanner = new Html5Qrcode("lector-qr");
         html5QrcodeScanner.stop().then(() => {
           guia.style.display = 'none';
           mensaje.classList.add('mostrar-mensaje');
         }).catch(err => {
-          console.error("Fallo al detener la cámara", err);
+          // Si da un error leve al detener, forzamos la vista de todos modos
+          guia.style.display = 'none';
+          mensaje.classList.add('mostrar-mensaje');
         });
       }
     </script>
