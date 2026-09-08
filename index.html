@@ -75,6 +75,7 @@
         cursor: pointer; margin-top: 25px; box-shadow: 0 5px 15px rgba(255,87,51,0.4);
         transition: all 0.2s ease; pointer-events: auto; width: 100%;
       }
+      button:active { transform: scale(0.97); }
       
       @keyframes escanear { 0%, 100% { top: 0%; } 50% { top: 100%; } }
       @keyframes procesar { 0% { top: 20%; opacity: 0.4; } 100% { top: 80%; opacity: 1; } }
@@ -83,6 +84,7 @@
   </head>
   <body>
 
+    <!-- Video en vivo original -->
     <video id="video-camara" autoplay playsinline muted></video>
 
     <div id="guia-escaneo">
@@ -95,7 +97,7 @@
       </p>
     </div>
 
-    <!-- ESCENA TRIDIMENSIONAL -->
+    <!-- ESCENA 3D HOLOGRÁFICA -->
     <div id="escena-3d">
       <div id="mensaje-aliento">
         <div class="icono-animado">✨🛸✨</div>
@@ -161,7 +163,7 @@
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
           detectorNativo.detect(video)
           .then(barcodes => {
-            // CORRECCIÓN DEFINITIVA: Validamos la longitud y accedemos al índice [0] de la matriz nativa
+            // 🛡️ EL ESCUDO DE SEGURIDAD CORREGIDO: Evita leer arrays vacíos al cargar la página
             if (barcodes && barcodes.length > 0 && escaneoActivo) {
               
               const contenidoQR = barcodes[0].rawValue; 
@@ -212,14 +214,12 @@
           textoEstado.innerText = 'MODO ESCÁNER ACTIVO';
           textoInferior.style.background = 'rgba(0,0,0,0.7)';
           textoInferior.innerText = 'Apunta al QR físico para activar tu mensaje';
+
+guia.style.display = 'flex';
+setTimeout(() => { guia.style.opacity = '1'; }, 50);
+
+escaneoActivo = true;
+requestAnimationFrame(bucleDeteccionNativa);
+}, 600);
+}
           
-          guia.style.display = 'flex';
-
-          setTimeout(() => { guia.style.opacity = '1';
-
-           }, 50);
-           
-           escaneoActivo = true;
-           requestAnimationFrame(bucleDeteccionNativa);
-        }, 600);
-    }
