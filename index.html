@@ -1,32 +1,229 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
   <head>
-    <title>Momento de Alegria</title>
-    <!-- Cargamos las librerias de codigo abierto de A-Frame y AR.js -->
-    <script src="https://aframe.io"></script>
-    <script src="https://githack.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Portal AR Tridimensional ✨</title>
+    <style>
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; background-color: #000; }
+      
+      #video-camara { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+      #canvas-invisible { display: none; }
+
+      /* Interfaz de guía visual verde */
+      #guia-escaneo {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+        padding: 40px 20px; box-sizing: border-box; z-index: 5; pointer-events: none;
+        opacity: 1;
+        transition: opacity 0.5s ease;
+      }
+      .cuadro-mira {
+        width: 220px; height: 220px; border: 3px dashed #00ff96; border-radius: 20px;
+        box-shadow: 0 0 15px rgba(0, 255, 150, 0.4); margin: auto; position: relative;
+        transition: all 0.3s ease;
+      }
+      #laser {
+        content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+        background-color: #00ff96; box-shadow: 0 0 8px #00ff96; animation: escanear 2s infinite ease-in-out;
+      }
+
+      /* Estados de procesamiento de la mira láser */
+      .procesando-mira { border-color: #FF8D1A !important; box-shadow: 0 0 25px rgba(255, 141, 26, 0.6) !important; }
+      .procesando-laser { background-color: #FF8D1A !important; box-shadow: 0 0 15px #FF8D1A !important; animation: procesar 0.3s infinite alternate !important; }
+
+      /* ESCENA TRIDIMENSIONAL */
+      #espacio-3d {
+        display: none; position: absolute; width: 100%; height: 100%;
+        perspective: 1000px; perspective-origin: center; z-index: 10;
+      }
+
+      .tarjeta-3d {
+        position: absolute; top: 50%; left: 50%;
+        width: 320px; padding: 35px 25px; border-radius: 32px;
+        background: linear-gradient(135deg, rgba(10, 25, 47, 0.96) 0%, rgba(16, 42, 73, 0.96) 100%);
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+        box-sizing: border-box; text-align: center;
+        
+        transform: translate(-50%, -50%) rotateX(45deg) translateZ(-200px);
+        transform-style: preserve-3d;
+        opacity: 0;
+        transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.6s ease;
+      }
+
+      .proyectar-3d {
+        transform: translate(-50%, -50%) rotateX(0deg) translateZ(50px) !important;
+        opacity: 1 !important;
+      }
+
+      .titulo-brillante {
+        font-size: 24px; margin: 0 0 15px 0; font-weight: 800; letter-spacing: 0.5px;
+        background: linear-gradient(45deg, #FFF, #FF8D1A);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      
+      .icono-flotante { font-size: 50px; margin-bottom: 10px; display: inline-block; animation: flotar 3s infinite ease-in-out; }
+      .caja-mision { background: rgba(255, 255, 255, 0.05); border-left: 3px solid #FF8D1A; padding: 15px; border-radius: 14px; margin-top: 25px; text-align: left; box-sizing: border-box; }
+
+      button {
+        padding: 14px 28px; font-size: 15px; border: none; border-radius: 25px;
+        background: linear-gradient(45deg, #FF5733, #FF8D1A); color: white; font-weight: bold; 
+        cursor: pointer; margin-top: 25px; box-shadow: 0 5px 15px rgba(255,87,51,0.4);
+        transition: all 0.2s ease; pointer-events: auto; width: 100%;
+      }
+
+      @keyframes escanear { 0%, 100% { top: 0%; } 50% { top: 100%; } }
+      @keyframes procesar { 0% { top: 20%; opacity: 0.4; } 100% { top: 80%; opacity: 1; } }
+      @keyframes flotar { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-8px) scale(1.05); filter: drop-shadow(0 0 15px rgba(255,141,26,0.5)); } }
+    </style>
   </head>
-  <body style="margin: 0px; overflow: hidden;">
-    
-    <!-- Inicializamos la escena de Realidad Aumentada sin interfaces molestas -->
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
-      
-      <!-- Usamos un marcador de matriz tipo codigo de barras (Barcode), que es compatible con estructuras de QR simplificados -->
-      <a-marker type="barcode" value="5">
+  <body>
+
+    <video id="video-camara" autoplay playsinline muted></video>
+    <canvas id="canvas-invisible"></canvas>
+
+    <div id="guia-escaneo">
+      <h2 id="texto-estado" style="margin: 0; font-size: 18px; color: #00ff96; text-shadow: 0 2px 4px #000; letter-spacing: 1px;">MODO ESCÁNER ACTIVO</h2>
+      <div class="cuadro-mira" id="mira">
+        <div id="laser"></div>
+      </div>
+      <p id="texto-inferior" style="font-size: 14px; color: #fff; background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 20px; font-weight: bold; text-shadow: 0 1px 2px #000;">
+        Apunta al QR físico para activar tu mensaje
+      </p>
+    </div>
+
+    <!-- ESCENA 3D EN ESPERA -->
+    <div id="espacio-3d">
+      <div id="tarjeta" class="tarjeta-3d">
+        <div class="icono-flotante">✨🛸✨</div>
+        <h2 class="titulo-brillante">¡Sintonía Exitosa!</h2>
         
-        <!-- Tu mensaje flotante en 3D -->
-        <a-text 
-          value="¡Estas haciendolo genial!\nTu sonrisa cambia el dia." 
-          position="0 0.5 0" 
-          rotation="-90 0 0" 
-          color="#4CC3D9" 
-          align="center" 
-          width="5">
-        </a-text>
+        <p style="font-size: 14.5px; line-height: 1.6; margin: 0; color: #e2e8f0; font-weight: 400;">
+          A veces el ritmo diario nos desconecta de lo importante. Detente un segundo y reconoce el camino avanzado. Tu esfuerzo es valioso, tus intenciones importan y tu potencial sigue intacto. Confía en lo que estás construyendo paso a paso.
+        </p>
         
-      </a-marker>
+        <div class="caja-mision">
+          <strong style="color: #FF8D1A; font-size: 11px; display: block; margin-bottom: 5px; letter-spacing: 0.5px; text-transform: uppercase;">Misión de Enfoque</strong>
+          <span id="texto-consejo" style="color: #cbd5e1; font-size: 13.5px; line-height: 1.45;">Cargando...</span>
+        </div>
+
+        <!-- El botón ahora ejecuta la función de reactivación suave -->
+        <button onclick="reestablecerEscaner()">Volver a Escanear</button>
+      </div>
+    </div>
+
+    <script type="module">
+      import QrScanner from "https://jsdelivr.net";
+
+      const video = document.getElementById('video-camara');
+      const espacio3D = document.getElementById('espacio-3d');
+      const tarjeta = document.getElementById('tarjeta');
+      const guia = document.getElementById('guia-escaneo');
+      const mira = document.getElementById('mira');
+      const laser = document.getElementById('laser');
+      const textoEstado = document.getElementById('texto-estado');
+      const textoInferior = document.getElementById('texto-inferior');
+      const textoConsejo = document.getElementById('texto-consejo');
       
-      
-    </a-scene>
-  </body>
-</html>
+      let escaneoActivo = true;
+      let qrScanner;
+
+      const misionesBienestar = [
+        "Dedica 2 minutos a relajar los hombros y respirar hondo de forma consciente.",
+        "Identifica tres detalles sencillos por los que sientas gratitud en este momento.",
+        "Haz una pausa de dos minutos para tomar agua y abordar el siguiente reto con calma.",
+        "Aléjate de las pantallas 3 minutos; un descanso corto reinicia tu claridad mental.",
+        "Reconoce tu avance de hoy. Has gestionado situaciones complejas y eso cuenta mucho."
+      ];
+
+      // Instanciamos el lector principal
+      qrScanner = new QrScanner(
+        video,
+        result => validarCodigo(result),
+        {
+          preferredCamera: 'environment',
+          highlightScanRegion: false,
+          highlightCodeOutline: false
+        }
+      );
+
+      // Arrancamos el flujo inicial
+      arrancarMotor();
+
+      function arrancarMotor() {
+        qrScanner.start().catch(err => {
+          console.error(err);
+          navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+          .then(stream => { video.srcObject = stream; video.play(); });
+        });
+      }
+
+      function validarCodigo(result) {
+        if (!escaneoActivo) return;
+
+        const textoDecodificado = result.data ? result.data : result;
+
+        if (textoDecodificado.includes("github.io") || textoDecodificado.includes("localhost") || textoDecodificado.includes("127.0.0.1")) {
+          escaneoActivo = false; 
+          qrScanner.stop(); // Pausa la lectura en segundo plano
+
+          const indiceAleatorio = Math.floor(Math.random() * misionesBienestar.length);
+          textoConsejo.innerText = misionesBienestar[indiceAleatorio];
+
+          ejecutarTransicionMagica();
+        }
+      }
+
+      function ejecutarTransicionMagica() {
+        mira.classList.add('procesando-mira');
+        laser.classList.add('procesando-laser');
+        textoEstado.style.color = '#FF8D1A';
+        textoEstado.innerText = 'PROCESANDO ENERGÍA';
+        textoInferior.innerText = '⚡ Sincronizando frecuencia vital...';
+
+        setTimeout(() => {
+          guia.style.opacity = '0';
+          setTimeout(() => {
+            guia.style.display = 'none';
+            
+            // ELIMINADA la línea que apagaba la cámara nativa (track.stop) 
+            // para que el lente se quede encendido esperando en el fondo de la tarjeta.
+
+            espacio3D.style.display = 'block';
+            setTimeout(() => {
+              tarjeta.classList.add('proyectar-3d');
+            }, 50);
+
+          }, 400);
+        }, 1500);
+      }
+
+      // NUEVA FUNCIÓN DE RESETEO INTERNO Y FLUIDO
+      window.reestablecerEscaner = function() {
+        // 1. Desvanecemos la tarjeta 3D hacia el fondo
+        tarjeta.classList.remove('proyectar-3d');
+        
+        setTimeout(() => {
+          espacio3D.style.display = 'none';
+          
+          // 2. Restauramos los estilos originales verdes del escáner
+          mira.classList.remove('procesando-mira');
+          laser.classList.remove('procesando-laser');
+          textoEstado.style.color = '#00ff96';
+          textoEstado.innerText = 'MODO ESCÁNER ACTIVO';
+          textoInferior.style.background = 'rgba(0,0,0,0.7)';
+          textoInferior.innerText = 'Apunta al QR físico para activar tu mensaje';
+          
+          // 3. Volvemos a mostrar la guía visual
+          guia.style.display = 'flex';
+          setTimeout(() => { guia.style.opacity = '1'; }, 50);
+
+          // 4. Reactivamos el motor de escaneo y el bucle
+          escaneoActivo = true;
+          arrancarMotor();
+        }, 600);
+    }
