@@ -25,14 +25,14 @@
   </head>
   <body>
 
-    <!-- Capa de Interacción obligatoria por políticas del Navegador -->
+    <!-- Pantalla de bienvenida interactiva -->
     <div id="interfaz-inicio">
       <h2 style="font-size: 24px; margin-bottom: 5px;">✨ Portal de Bienestar ✨</h2>
       <p style="font-size: 15px; color: #e0e0e0; max-width: 280px;">Presiona el botón para dar permiso a la cámara y descubrir tu mensaje.</p>
       <button onclick="iniciarExperiencia()">¡Activar Magia!</button>
     </div>
 
-    <!-- Escena AR optimizada con retraso de arranque manual -->
+    <!-- Escena AR vacía en espera de la señal de la cámara -->
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
       
       <a-marker preset="hiro">
@@ -50,25 +50,32 @@
     </a-scene>
 
     <script>
-      // Forzamos la pausa del sistema al cargar para que no intente usar la cámara antes de tiempo
+      // Pausamos la escena al cargar la página para evitar pantallas negras
       const escena = document.querySelector('a-scene');
       escena.pause();
 
       function iniciarExperiencia() {
-        // 1. Ocultamos el menú de bienvenida
-        document.getElementById('interfaz-inicio').style.display = 'none';
-        
-        // 2. Despertamos la escena de A-Frame y forzamos al navegador a pedir la cámara mediante un evento nativo
-        escena.play();
-        
-        // 3. Reajustamos el tamaño del contenedor del video para corregir pantallas negras pasivas
-        setTimeout(() => {
-          if (escena && escena.materials && escena.setupToolkit) {
-             escena.resize();
-          } else {
-             window.dispatchEvent(new Event('resize'));
-          }
-        }, 300);
+        // Pedimos los permisos de la cámara directamente al sistema operativo del celular
+        navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' } // Forza el uso de la cámara trasera
+        })
+        .then(function(stream) {
+          // Si el usuario acepta, ocultamos la interfaz azul
+          document.getElementById('interfaz-inicio').style.display = 'none';
+          
+          // Despertamos el motor de Realidad Aumentada
+          escena.play();
+          
+          // Forzamos al navegador a redibujar la pantalla para acoplar la cámara trasera
+          setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+          }, 300);
+        })
+        .catch(function(err) {
+          // Mensaje de error amigable en caso de que falten permisos globales en el celular
+          alert("Por favor, asegúrate de permitir el acceso a la cámara en los ajustes de tu navegador.");
+          console.log("Error al abrir cámara: ", err);
+        });
       }
     </script>
   </body>
