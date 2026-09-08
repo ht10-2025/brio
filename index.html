@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Portal AR Inicial ✨</title>
     <style>
-      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; background-color: #000; }
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; background-color: #000; }
       
       #video-camara { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
 
@@ -14,7 +14,7 @@
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         display: flex; flex-direction: column; justify-content: space-between; align-items: center;
         padding: 40px 20px; box-sizing: border-box; z-index: 5; pointer-events: none;
-        transition: opacity 0.5s ease; /* Permite un desvanecido suave */
+        transition: opacity 0.5s ease;
       }
       .cuadro-mira {
         width: 220px; height: 220px; border: 3px dashed #00ff96; border-radius: 20px;
@@ -22,35 +22,44 @@
         transition: all 0.3s ease;
       }
       
-      /* Línea láser con ID para manipularla con JavaScript */
       #laser {
         content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
         background-color: #00ff96; box-shadow: 0 0 8px #00ff96; animation: escanear 2s infinite ease-in-out;
       }
 
-      /* Animación cuando el sistema está procesando el QR */
       .procesando-mira { border-color: #FF8D1A !important; box-shadow: 0 0 25px rgba(255, 141, 26, 0.6) !important; }
       .procesando-laser { background-color: #FF8D1A !important; box-shadow: 0 0 15px #FF8D1A !important; animation: procesar 0.3s infinite alternate !important; }
 
-      /* Tarjeta del Mensaje Sorpresa con transición de opacidad */
+      /* NUEVA TARJETA ENRIQUECIDA (Efecto cristal de alta calidad) */
       #mensaje-aliento {
         display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
-        background: rgba(15, 32, 39, 0.96); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-        border: 2px solid #FF8D1A; padding: 30px 20px; border-radius: 24px; text-align: center;
-        width: 280px; box-sizing: border-box; box-shadow: 0 15px 35px rgba(0,0,0,0.6); z-index: 10;
+        background: linear-gradient(135deg, rgba(15, 32, 39, 0.95) 0%, rgba(32, 58, 67, 0.95) 100%);
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border: 2px solid rgba(255, 141, 26, 0.5); padding: 30px 25px; border-radius: 30px; text-align: center;
+        width: 300px; box-sizing: border-box; box-shadow: 0 20px 50px rgba(0,0,0,0.7); z-index: 10;
         opacity: 0;
-        transition: opacity 0.6s cubic-bezier(0.165, 0.84, 0.44, 1), transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       }
       
-      /* Clase que activa la aparición suave */
-      .mostrar-mensaje { 
-        display: block !important; 
-        opacity: 1 !important; 
-        transform: translate(-50%, -50%) scale(1) !important; 
+      .mostrar-mensaje { display: block !important; opacity: 1 !important; transform: translate(-50%, -50%) scale(1) !important; }
+      
+      /* Elemento animado dinámico dentro de la tarjeta */
+      .icono-animado {
+        font-size: 50px; margin-bottom: 10px; display: inline-block;
+        animation: latido 1.2s infinite alternate cubic-bezier(0.215, 0.610, 0.355, 1);
       }
+
+      button {
+        padding: 14px 28px; font-size: 16px; border: none; border-radius: 25px;
+        background: linear-gradient(45deg, #FF5733, #FF8D1A); color: white; font-weight: bold; 
+        cursor: pointer; margin-top: 25px; box-shadow: 0 5px 15px rgba(255,87,51,0.4);
+        transition: all 0.2s ease; pointer-events: auto; width: 100%;
+      }
+      button:active { transform: scale(0.97); box-shadow: 0 2px 5px rgba(255,87,51,0.2); }
       
       @keyframes escanear { 0%, 100% { top: 0%; } 50% { top: 100%; } }
       @keyframes procesar { 0% { top: 20%; opacity: 0.4; } 100% { top: 80%; opacity: 1; } }
+      @keyframes latido { 0% { transform: scale(0.9); filter: drop-shadow(0 0 2px rgba(255,255,255,0.2)); } 100% { transform: scale(1.1); filter: drop-shadow(0 0 15px rgba(255,141,26,0.6)); } }
     </style>
   </head>
   <body>
@@ -58,22 +67,24 @@
     <video id="video-camara" autoplay playsinline muted></video>
 
     <div id="guia-escaneo">
-      <h2 id="texto-estado" style="margin: 0; font-size: 18px; color: #00ff96; text-shadow: 0 2px 4px #000; letter-spacing: 1px; transition: color 0.3s;">MODO ESCÁNER ACTIVO</h2>
+      <h2 id="texto-estado" style="margin: 0; font-size: 18px; color: #00ff96; text-shadow: 0 2px 4px #000; letter-spacing: 1px;">MODO ESCÁNER ACTIVO</h2>
       <div class="cuadro-mira" id="mira">
         <div id="laser"></div>
       </div>
-      <p id="texto-inferior" style="font-size: 14px; color: #fff; background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 20px; font-weight: bold; text-shadow: 0 1px 2px #000; transition: all 0.3s;">
+      <p id="texto-inferior" style="font-size: 14px; color: #fff; background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 20px; font-weight: bold; text-shadow: 0 1px 2px #000;">
         Apunta al QR físico para activar tu mensaje
       </p>
     </div>
 
+    <!-- TARJETA MEJORADA CON ICONO DE LATIDO Y ESTILOS PULIDOS -->
     <div id="mensaje-aliento">
-      <span style="font-size: 32px;">✨</span>
-      <h2 style="font-size: 22px; margin: 10px 0; color: #FF8D1A;">¡Validación Correcta!</h2>
-      <p style="font-size: 16px; line-height: 1.5; margin: 0; color: #fff; font-weight: 500;">
-        ¡Lo estás haciendo genial!<br>Tu sonrisa cambia el día.
+      <div class="icono-animado">✨💛✨</div>
+      <h2 style="font-size: 24px; margin: 10px 0 5px 0; background: linear-gradient(45deg, #FFF, #FF8D1A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">¡Sintonía Exitosa!</h2>
+      <p style="font-size: 16px; line-height: 1.6; margin: 10px 0 0 0; color: #f0f0f0; font-weight: 400;">
+        ¡Lo estás haciendo genial!<br>
+        <span style="color: #FF8D1A; font-weight: bold;">Tu sonrisa cambia el día.</span>
       </p>
-      <button onclick="window.location.reload()" style="margin-top: 20px; padding: 12px 24px; background: linear-gradient(45deg, #FF5733, #FF8D1A); color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(255,87,51,0.3); pointer-events: auto;">Volver a Escanear</button>
+      <button onclick="window.location.reload()">Volver a Escanear</button>
     </div>
 
     <script>
@@ -88,17 +99,20 @@
       let escaneoActivo = true;
       let detectorNativo;
 
+      // 🛑 REGLA DE SEGURIDAD: Reemplaza esta URL exacta por el enlace de TU página web de GitHub Pages
+      // Ejemplo: "https://github.io"
+      const MI_URL_OFICIAL = window.location.href; 
+
       if ('BarcodeDetector' in window) {
         detectorNativo = new BarcodeDetector({ formats: ['qr_code'] });
       } else {
-        alert("Tu navegador no soporta el motor nativo de escaneo. Inténtalo desde un celular con Chrome o Brave actualizado.");
+        alert("Tu navegador no soporta el motor nativo de escaneo.");
       }
 
       navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
       .then(conectarStream)
       .catch(function() {
-        navigator.mediaDevices.getUserMedia({ video: true })
-        .then(conectarStream);
+        navigator.mediaDevices.getUserMedia({ video: true }).then(conectarStream);
       });
 
       function conectarStream(stream) {
@@ -116,10 +130,18 @@
           detectorNativo.detect(video)
           .then(barcodes => {
             if (barcodes.length > 0 && escaneoActivo) {
-              escaneoActivo = false; // Detiene lecturas futuras inmediatamente
               
-              // EJECUTAMOS EL EFECTO DRAMÁTICO DE ESCANEO ANTES DE MOSTRAR EL MENSAJE
-              ejecutarTransicionMagica();
+              // Extraemos el texto plano o enlace que contiene el QR físico capturado
+              const contenidoQR = barcodes[0].rawValue;
+              
+              // VALIDACIÓN ESTRICTA: ¿El QR escaneado es el de nuestra propia web?
+              // Usamos 'includes' para cerciorarnos de que apunte a nuestro hosting de GitHub o dominio
+              if (contenidoQR.includes("github.io") || contenidoQR === MI_URL_OFICIAL) {
+                escaneoActivo = false; 
+                ejecutarTransicionMagica();
+              } else {
+                console.log("QR ignorado por no ser el oficial del Portal.");
+              }
             }
           })
           .catch(err => console.error(err));
@@ -129,30 +151,21 @@
       }
 
       function ejecutarTransicionMagica() {
-        // 1. Cambiamos la interfaz visual a modo "Procesando" (Color naranja energético)
         mira.classList.add('procesando-mira');
         laser.classList.add('procesando-laser');
         textoEstado.style.color = '#FF8D1A';
-        textoEstado.innerText = 'SINCRO-ENERGÍA ACTIVA';
-        textoInferior.innerText = '⚡ Analizando código vital...';
-        textoInferior.style.background = 'rgba(255, 141, 26, 0.2)';
+        textoEstado.innerText = 'PROCESANDO ENERGÍA';
+        textoInferior.innerText = '⚡ Sincronizando vibras...';
 
-        // 2. Esperamos 1.5 segundos simulando el escaneo profundo
         setTimeout(() => {
-          // Desvanecemos suavemente la guía verde/naranja
           guia.style.opacity = '0';
-          
           setTimeout(() => {
             guia.style.display = 'none';
-            
-            // Apagamos la cámara de fondo de forma limpia
             const stream = video.srcObject;
             if (stream) stream.getTracks().forEach(track => track.stop());
-
-            // 3. Hacemos brotar el mensaje con un fundido elegante (Fade-In)
             mensaje.classList.add('mostrar-mensaje');
-          }, 400); // Pequeño margen para que termine el desvanecido de la guía
-        }, 1500); // Duración del efecto láser de procesamiento
+          }, 400);
+        }, 1500);
       }
     </script>
   </body>
