@@ -3,68 +3,95 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Mensaje de Alegría AR</title>
-    
-    <!-- Librerías estables oficiales -->
-    <script src="https://aframe.io"></script>
-    <script src="https://githack.com"></script>
-    
+    <title>Momento de Alegría ✨</title>
     <style>
-      /* Evitamos que el navegador recalcule el tamaño y apague la cámara */
-      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; }
-      
-      /* Menú flotante estilo 'Overlay' para no alterar las dimensiones de la cámara */
-      #interfaz-inicio {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      /* Fondo animado moderno con degradado para simular energía */
+      html, body {
+        margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #0f2027 100%);
         display: flex; flex-direction: column; justify-content: center; align-items: center;
-        background: linear-gradient(135deg, rgba(30,60,114,0.95) 0%, rgba(42,82,152,0.95) 100%); 
-        z-index: 9999; color: white; text-align: center; padding: 20px; box-sizing: border-box;
+        color: white; text-align: center; box-sizing: border-box;
       }
+
+      /* Contenedor principal con efecto de cristal (Glassmorphism) */
+      .tarjeta {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 24px; padding: 35px 25px; margin: 20px;
+        max-width: 320px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        transition: all 0.4s ease;
+      }
+
+      /* Círculo animado central que simula un escáner */
+      .escaner-anillo {
+        width: 100px; height: 100px; border-radius: 50%;
+        border: 4px dashed rgba(255, 87, 51, 0.6);
+        margin: 0 auto 25px auto; display: flex; justify-content: center; align-items: center;
+        animation: rotar 8s linear infinite; position: relative;
+      }
+      .escaner-anillo::after {
+        content: '✨'; font-size: 32px; animation: parpadeo 1.5s infinite alternate;
+      }
+
       button {
-        padding: 18px 40px; font-size: 20px; border: none; border-radius: 35px;
+        padding: 16px 36px; font-size: 18px; border: none; border-radius: 30px;
         background: linear-gradient(45deg, #FF5733, #FF8D1A); color: white; font-weight: bold; 
-        cursor: pointer; margin-top: 25px; box-shadow: 0 5px 20px rgba(255,87,51,0.5);
+        cursor: pointer; margin-top: 15px; box-shadow: 0 5px 20px rgba(255,87,51,0.4);
+        transition: transform 0.2s, box-shadow 0.2s; width: 100%;
       }
+      button:active { transform: scale(0.96); }
+
+      /* Animación del mensaje motivacional cuando aparece */
+      .mensaje-revelado {
+        font-size: 22px; font-weight: 600; line-height: 1.5; color: #fff;
+        text-shadow: 0 2px 10px rgba(255,255,255,0.2); animation: aparecer 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      }
+
+      @keyframes rotar { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      @keyframes parpadeo { 0% { opacity: 0.4; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.1); } }
+      @keyframes aparecer { 0% { opacity: 0; transform: scale(0.7); } 100% { opacity: 1; transform: scale(1); } }
     </style>
   </head>
   <body>
 
-    <!-- Menú de inicio flotante -->
-    <div id="interfaz-inicio">
-      <h2 style="font-size: 24px; margin-bottom: 5px;">✨ Portal de Bienestar ✨</h2>
-      <p style="font-size: 15px; color: #e0e0e0; max-width: 280px;">Presiona el botón para estabilizar los sensores y descubrir tu mensaje.</p>
-      <button onclick="iniciarExperiencia()">¡Activar Magia!</button>
+    <div class="tarjeta" id="contenedor">
+      <div class="escaner-anillo" id="icono"></div>
+      <div id="pantalla-contenido">
+        <h2 style="font-size: 24px; margin: 0 0 10px 0;">Portal de Bienestar</h2>
+        <p style="font-size: 15px; color: #e0e0e0; line-height: 1.5; margin-bottom: 20px;">
+          Esta tarjeta digital contiene un mensaje de aliento exclusivo generado para ti.
+        </p>
+        <button onclick="revelarMensaje()">¡Descubrir Mensaje!</button>
+      </div>
     </div>
 
-    <!-- La escena AR arranca de fondo inmediatamente para asegurar el permiso -->
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; facingMode: environment;" vr-mode-ui="enabled: false">
-      
-      <a-marker preset="hiro">
-        <a-text 
-          value="¡Lo estas haciendo genial!\nTu sonrisa cambia el dia." 
-          position="0 0.6 0" 
-          rotation="-90 0 0" 
-          color="#FF5733" 
-          align="center" 
-          width="4">
-        </a-text>
-      </a-marker>
-
-      
-    </a-scene>
-
     <script>
-      function iniciarExperiencia() {
-        // En lugar de alterar la estructura del documento, desvanecemos la capa suavemente
-        const capa = document.getElementById('interfaz-inicio');
-        capa.style.transition = "opacity 0.4s ease";
-        capa.style.opacity = "0";
+      function revelarMensaje() {
+        const contenido = document.getElementById('pantalla-contenido');
+        const icono = document.getElementById('icono');
+        
+        // Cambiamos el icono a un modo activo radiante
+        icono.style.border = "4px solid #FF8D1A";
+        icono.style.animation = "parpadeo 0.5s infinite alternate";
+        
+        // Efecto rápido de "procesamiento" (0.5 segundos) antes de mostrar la magia
+        contenido.innerHTML = `<p style="font-size: 16px; color: #FF8D1A; font-weight: bold; margin: 20px 0;">Sincronizando energía...</p>`;
         
         setTimeout(() => {
-          capa.style.display = 'none';
-          // Disparamos un evento global para acoplar la cámara si se quedó pausada
-          window.dispatchEvent(new Event('resize'));
-        }, 400);
+          // Reemplazamos por el mensaje final con su animación impecable
+          contenido.innerHTML = `
+            <div class="mensaje-revelado">
+              ¡Lo estás haciendo genial!<br>
+              <span style="color: #FF8D1A; font-size: 16px; font-weight: normal; display:block; margin-top:15px;">
+                Sonríe, tu esfuerzo realmente vale la pena.
+              </span>
+            </div>
+            <button onclick="window.location.reload()" style="background: rgba(255,255,255,0.15); box-shadow: none; font-size: 14px; padding: 10px; margin-top: 25px;">Volver a leer</button>
+          `;
+        }, 600);
       }
     </script>
   </body>
