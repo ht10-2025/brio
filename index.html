@@ -8,6 +8,7 @@
       html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; background-color: #000; }
       
       #video-camara { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+      #canvas-invisible { display: none; }
 
       /* Interfaz de guía visual verde */
       #guia-escaneo {
@@ -26,44 +27,42 @@
         background-color: #00ff96; box-shadow: 0 0 8px #00ff96; animation: escanear 2s infinite ease-in-out;
       }
 
+      /* Estados de procesamiento de la mira láser */
       .procesando-mira { border-color: #FF8D1A !important; box-shadow: 0 0 25px rgba(255, 141, 26, 0.6) !important; }
       .procesando-laser { background-color: #FF8D1A !important; box-shadow: 0 0 15px #FF8D1A !important; animation: procesar 0.3s infinite alternate !important; }
 
-      /* ESCENA TRIDIMENSIONAL (Estructura base para el 3D) */
+      /* ESCENA TRIDIMENSIONAL TRIDIMENSIONAL (Inicio del 3D futuro) */
       #espacio-3d {
         display: none; position: absolute; width: 100%; height: 100%;
         perspective: 1000px; perspective-origin: center; z-index: 10;
       }
 
-      /* Contenedor del mensaje con rotación espacial real */
       .tarjeta-3d {
         position: absolute; top: 50%; left: 50%;
         width: 320px; padding: 35px 25px; border-radius: 32px;
-        background: linear-gradient(135deg, rgba(10, 25, 47, 0.94) 0%, rgba(16, 42, 73, 0.94) 100%);
+        background: linear-gradient(135deg, rgba(10, 25, 47, 0.96) 0%, rgba(16, 42, 73, 0.96) 100%);
         backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         border: 1px solid rgba(255, 255, 255, 0.12);
         box-shadow: 0 30px 60px rgba(0,0,0,0.8);
         box-sizing: border-box; text-align: center;
         
-        /* Inicialización en el espacio 3D */
         transform: translate(-50%, -50%) rotateX(45deg) translateZ(-200px);
         transform-style: preserve-3d;
         opacity: 0;
         transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1), opacity 1s ease;
       }
 
-      /* Clase que activa la proyección hacia adelante (Efecto AR Holográfico) */
       .proyectar-3d {
         transform: translate(-50%, -50%) rotateX(0deg) translateZ(50px) !important;
         opacity: 1 !important;
       }
 
-      /* Título corregido para VS Code y navegadores */
+      /* Título corregido: Versión estándar + Prefijo para evitar advertencias en VS Code */
       .titulo-brillante {
         font-size: 24px; margin: 0 0 15px 0; font-weight: 800; letter-spacing: 0.5px;
         background: linear-gradient(45deg, #FFF, #FF8D1A);
         -webkit-background-clip: text;
-        background-clip: text; /* Corrección para evitar el Warning en VS Code */
+        background-clip: text;
         -webkit-text-fill-color: transparent;
       }
       
@@ -84,7 +83,10 @@
   </head>
   <body>
 
+    <!-- Video de la cámara nativa de fondo -->
     <video id="video-camara" autoplay playsinline muted></video>
+    <!-- Canvas auxiliar oculto que no genera demoras de renderizado -->
+    <canvas id="canvas-invisible"></canvas>
 
     <div id="guia-escaneo">
       <h2 id="texto-estado" style="margin: 0; font-size: 18px; color: #00ff96; text-shadow: 0 2px 4px #000; letter-spacing: 1px;">MODO ESCÁNER ACTIVO</h2>
@@ -96,7 +98,7 @@
       </p>
     </div>
 
-    <!-- ESCENA CON PERSPECTIVA TRIDIMENSIONAL -->
+    <!-- ESCENA 3D EN ESPERA -->
     <div id="espacio-3d">
       <div id="tarjeta" class="tarjeta-3d">
         <div class="icono-flotante">✨🛸✨</div>
@@ -115,7 +117,10 @@
       </div>
     </div>
 
-    <script>
+    <!-- CARGAMOS LA LIBRERÍA DE DETECCIÓN MEDIANTE UN MÓDULO SEGURO E INDEPENDIENTE DE UNPJK -->
+    <script type="module">
+      import QrScanner from "https://jsdelivr.net";
+
       const video = document.getElementById('video-camara');
       const espacio3D = document.getElementById('espacio-3d');
       const tarjeta = document.getElementById('tarjeta');
@@ -127,7 +132,6 @@
       const textoConsejo = document.getElementById('texto-consejo');
       
       let escaneoActivo = true;
-      let detectorNativo;
 
       const misionesBienestar = [
         "Dedica 2 minutos a relajar los hombros y respirar hondo de forma consciente.",
@@ -137,48 +141,46 @@
         "Reconoce tu avance de hoy. Has gestionado situaciones complejas y eso cuenta mucho."
       ];
 
-      if ('BarcodeDetector' in window) {
-        detectorNativo = new BarcodeDetector({ formats: ['qr_code'] });
-      }
+      // Instanciamos el lector atado directamente al elemento de video
+      const qrScanner = new QrScanner(
+        video,
+        result => validarCodigo(result),
+        {
+          preferredCamera: 'environment', // Obliga el uso del lente trasero
+          highlightScanRegion: false,
+          highlightCodeOutline: false
+        }
+      );
 
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-      .then(conectarStream)
-      .catch(function() {
-        navigator.mediaDevices.getUserMedia({ video: true }).then(conectarStream);
+      // Encendemos la cámara con el motor modular estable
+      qrScanner.start().catch(err => {
+        console.error(err);
+        // Respaldo clásico si el motor modular es bloqueado de golpe
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(stream => { video.srcObject = stream; video.play(); });
       });
 
-      function conectarStream(stream) {
-        video.srcObject = stream;
-        video.play();
-        video.addEventListener('loadedmetadata', function() {
-          if (detectorNativo) { bucleDeteccionNativa(); }
-        });
-      }
-
-      function bucleDeteccionNativa() {
+      // FUNCIÓN DE CONTROL DE ACCESO ESTRICTO
+      function validarCodigo(result) {
         if (!escaneoActivo) return;
 
-        if (video.readyState === video.HAVE_ENOUGH_DATA) {
-          detectorNativo.detect(video)
-          .then(barcodes => {
-            if (barcodes.length > 0 && escaneoActivo) {
-              
-              // 🚨 EXPLICACIÓN DE POR QUÉ DEJA DE ESCANEAR:
-              // Para que se active de forma infalible con tu QR, eliminamos restricciones estrictas de strings
-              // y obligamos al detector a validar que el código contenga texto real
-              if (barcodes[0].rawValue.length > 0) {
-                escaneoActivo = false; 
+        // Extraemos la URL decodificada del QR capturado
+        const textoDecodificado = result.data ? result.data : result;
 
-                const indiceAleatorio = Math.floor(Math.random() * misionesBienestar.length);
-                textoConsejo.innerText = misionesBienestar[indiceAleatorio];
+        // VERIFICACIÓN ESTRICTA: Solo activa el naranja si el QR contiene tu hosting oficial
+        if (textoDecodificado.includes("github.io") || textoDecodificado.includes("localhost") || textoDecodificado.includes("127.0.0.1")) {
+          escaneoActivo = false; 
+          qrScanner.stop(); // Apaga la lectura para evitar bucles
 
-                ejecutarTransicionMagica();
-              }
-            }
-          })
-          .catch(err => console.error(err));
+          // Seteamos la misión aleatoria
+          const indiceAleatorio = Math.floor(Math.random() * misionesBienestar.length);
+          textoConsejo.innerText = misionesBienestar[indiceAleatorio];
+
+          // Disparamos la animación del láser naranja progresivo
+          ejecutarTransicionMagica();
+        } else {
+          console.log("QR extraño detectado e ignorado: ", textoDecodificado);
         }
-        if (escaneoActivo) { requestAnimationFrame(bucleDeteccionNativa); }
       }
 
       function ejecutarTransicionMagica() {
@@ -193,7 +195,7 @@
           setTimeout(() => {
             guia.style.display = 'none';
             
-            // Apagamos la cámara de fondo
+            // Apagamos la cámara de fondo de forma limpia
             const stream = video.srcObject;
             if (stream) stream.getTracks().forEach(track => track.stop());
             
@@ -204,8 +206,5 @@
             }, 50);
 
           }, 400);
-        }, 1500);
-      }
-    </script>
-  </body>
-</html>
+}, 1500);
+}
