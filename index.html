@@ -6,10 +6,11 @@
     <title>Portal AR Inicial ✨</title>
     <style>
       html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; background-color: #000; }
+      
+      /* La cámara real ocupará todo el fondo de forma fluida */
       #video-camara { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
-      #canvas-oculto { display: none; }
 
-      /* Interfaz de escáner */
+      /* Interfaz de guía visual verde */
       #guia-escaneo {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         display: flex; flex-direction: column; justify-content: space-between; align-items: center;
@@ -24,10 +25,10 @@
         background-color: #00ff96; box-shadow: 0 0 8px #00ff96; animation: escanear 2s infinite ease-in-out;
       }
 
-      /* Mensaje sorpresa flotante */
+      /* Tarjeta del Mensaje Sorpresa */
       #mensaje-aliento {
         display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        background: rgba(15, 32, 39, 0.96); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        background: rgba(15, 32, 39, 0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
         border: 2px solid #FF8D1A; padding: 30px 20px; border-radius: 24px; text-align: center;
         width: 280px; box-sizing: border-box; box-shadow: 0 15px 35px rgba(0,0,0,0.6); z-index: 10;
       }
@@ -39,9 +40,10 @@
   </head>
   <body>
 
-    <video id="video-camara" autoplay playsinline muted></video>
-    <canvas id="canvas-oculto"></canvas>
+    <!-- La cámara se mantendrá encendida aquí abajo todo el tiempo -->
+    <video id="video-camara"></video>
 
+    <!-- Guía del visor sobre la pantalla -->
     <div id="guia-escaneo">
       <h2 style="margin: 0; font-size: 18px; color: #00ff96; text-shadow: 0 2px 4px #000; letter-spacing: 1px;">MODO ESCÁNER ACTIVO</h2>
       <div class="cuadro-mira"></div>
@@ -50,7 +52,7 @@
       </p>
     </div>
 
-    <!-- El Mensaje Oculto -->
+    <!-- El Mensaje Oculto que SOLO saldrá tras leer un QR real -->
     <div id="mensaje-aliento">
       <span style="font-size: 32px;">✨</span>
       <h2 style="font-size: 22px; margin: 10px 0; color: #FF8D1A;">¡Validación Correcta!</h2>
@@ -60,73 +62,39 @@
       <button onclick="window.location.reload()" style="margin-top: 20px; padding: 12px 24px; background: linear-gradient(45deg, #FF5733, #FF8D1A); color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(255,87,51,0.3);">Volver a Escanear</button>
     </div>
 
-    <script>
-      // MINI-MOTOR DE ESCANEO PROPIO INTEGRADO (Basado en patrones de contraste para QR estándar)
-      // Al estar incrustado aquí de forma local, evade cualquier bloqueo de privacidad/Tracking Prevention
+    <!-- Invocamos la librería definitiva de alto rendimiento como un módulo de confianza del navegador -->
+    <script type="module">
+      import QrScanner from "https://jsdelivr.net";
+
       const video = document.getElementById('video-camara');
-      const canvas = document.getElementById('canvas-oculto');
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
       const mensaje = document.getElementById('mensaje-aliento');
       const guia = document.getElementById('guia-escaneo');
-      let escaneoActivo = true;
 
-      // Solicitud inteligente de cámara (Entorno móvil vs. PC de escritorio)
-      const restricciones = { video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } } };
+      // Instanciamos el lector atándolo al elemento de video nativo
+      const qrScanner = new QrScanner(
+        video,
+        result => onScanSuccess(result),
+        {
+          preferredCamera: 'environment', // Forza la cámara trasera en móviles
+          highlightScanRegion: false,     // Desactivamos luces redundantes
+          highlightCodeOutline: false
+        }
+      );
 
-      navigator.mediaDevices.getUserMedia(restricciones)
-      .then(conectarStream)
-      .catch(function() {
-        navigator.mediaDevices.getUserMedia({ video: true })
-        .then(conectarStream)
-        .catch(function() { alert("Por favor, otorga los permisos necesarios a la cámara."); });
+      // Encendemos el motor de la cámara de inmediato
+      qrScanner.start().catch(err => {
+        console.error("Fallo al inicializar la cámara:", err);
+        alert("Asegúrate de permitir el acceso a la cámara en tu navegador.");
       });
 
-      function conectarStream(stream) {
-        video.srcObject = stream;
-        video.setAttribute("playsinline", true);
-        video.play();
-        video.addEventListener('loadedmetadata', function() {
-          requestAnimationFrame(bucleEscaneoLocal);
-        });
-      }
-
-      function bucleEscaneoLocal() {
-        if (!escaneoActivo) return;
-
-        if (video.readyState === video.HAVE_ENOUGH_DATA) {
-          canvas.width = 300; // Reducimos tamaño para procesamiento ultrarrápido
-          canvas.height = 225;
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          
-          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const pixeles = imgData.data;
-
-          // Algoritmo nativo de detección por bloques de alto contraste
-          // Analiza si hay esquinas y patrones concéntricos oscuros (característicos de un QR)
-          let patronesDetectados = 0;
-          for (let i = 0; i < pixeles.length; i += 40) {
-            const r = pixeles[i];
-            const g = pixeles[i+1];
-            const b = pixeles[i+2];
-            // Si detecta un píxel extremadamente oscuro adyacente a uno claro, evalúa contraste
-            if (r < 50 && g < 50 && b < 50) {
-              patronesDetectados++;
-            }
-          }
-
-          // Ajustamos umbral de sensibilidad para el "Efecto de lectura"
-          if (patronesDetectados > 180) {
-            escaneoActivo = false;
-            // Apagamos la cámara de forma limpia
-            const stream = video.srcObject;
-            if(stream) stream.getTracks().forEach(track => track.stop());
-            
-            guia.style.display = 'none';
-            mensaje.classList.add('mostrar-mensaje');
-            return;
-          }
-        }
-        requestAnimationFrame(bucleEscaneoLocal);
+      // Esta función SOLO se ejecutará si el motor decodifica datos reales de un QR
+      function onScanSuccess(result) {
+        // Detiene el análisis para evitar lecturas duplicadas
+        qrScanner.stop(); 
+        
+        // Muestra la tarjeta del mensaje y oculta las líneas guía
+        guia.style.display = 'none';
+        mensaje.classList.add('mostrar-mensaje');
       }
     </script>
   </body>
