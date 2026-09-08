@@ -14,6 +14,7 @@
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         display: flex; flex-direction: column; justify-content: space-between; align-items: center;
         padding: 40px 20px; box-sizing: border-box; z-index: 5; pointer-events: none;
+        opacity: 1;
         transition: opacity 0.5s ease;
       }
       .cuadro-mira {
@@ -30,40 +31,71 @@
       .procesando-mira { border-color: #FF8D1A !important; box-shadow: 0 0 25px rgba(255, 141, 26, 0.6) !important; }
       .procesando-laser { background-color: #FF8D1A !important; box-shadow: 0 0 15px #FF8D1A !important; animation: procesar 0.3s infinite alternate !important; }
 
-      /* NUEVA TARJETA ENRIQUECIDA (Efecto cristal de alta calidad) */
+      /* CONTENEDOR 3D (Perspectiva para el holograma) */
+      #escena-holograma {
+        display: none; position: absolute; width: 100%; height: 100%;
+        perspective: 1200px; perspective-origin: center; z-index: 10;
+        background: rgba(0, 0, 0, 0.4); /* Filtro oscuro sutil sobre el video */
+      }
+
+      /* TARJETA MEJORADA CON EFECTO CRISTAL Y PERSPECTIVA 3D TRIDIMENSIONAL */
       #mensaje-aliento {
-        display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
-        background: linear-gradient(135deg, rgba(15, 32, 39, 0.95) 0%, rgba(32, 58, 67, 0.95) 100%);
-        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-        border: 2px solid rgba(255, 141, 26, 0.5); padding: 30px 25px; border-radius: 30px; text-align: center;
-        width: 300px; box-sizing: border-box; box-shadow: 0 20px 50px rgba(0,0,0,0.7); z-index: 10;
+        position: absolute; top: 50%; left: 50%; 
+        background: linear-gradient(135deg, rgba(10, 25, 47, 0.96) 0%, rgba(20, 42, 63, 0.96) 100%);
+        backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.15); padding: 35px 25px; border-radius: 32px; text-align: center;
+        width: 325px; box-sizing: border-box; box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+        
+        /* Ajuste espacial inicial (Inclinada y al fondo) */
+        transform: translate(-50%, -50%) rotateX(35deg) translateZ(-150px);
+        transform-style: preserve-3d;
         opacity: 0;
-        transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.6s ease;
       }
       
-      .mostrar-mensaje { display: block !important; opacity: 1 !important; transform: translate(-50%, -50%) scale(1) !important; }
+      /* Animación de proyección hacia el frente */
+      .mostrar-mensaje { 
+        opacity: 1 !important; 
+        transform: translate(-50%, -50%) rotateX(0deg) translateZ(50px) !important; 
+      }
       
-      /* Elemento animado dinámico dentro de la tarjeta */
+      /* Elemento animado dinámico */
       .icono-animado {
-        font-size: 50px; margin-bottom: 10px; display: inline-block;
-        animation: latido 1.2s infinite alternate cubic-bezier(0.215, 0.610, 0.355, 1);
+        font-size: 45px; margin-bottom: 5px; display: inline-block;
+        animation: latido 1.5s infinite alternate cubic-bezier(0.215, 0.610, 0.355, 1);
+      }
+
+      /* Título corregido: Soluciona la advertencia de VS Code */
+      .titulo-holograma {
+        font-size: 24px; margin: 5px 0 15px 0; font-weight: 800;
+        background: linear-gradient(45deg, #FFF, #FF8D1A);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      /* Caja para la Misión Nutrita Variable */
+      .caja-mision {
+        background: rgba(255, 255, 255, 0.05); border-left: 3px solid #FF8D1A;
+        padding: 14px; border-radius: 12px; margin-top: 25px; text-align: left; box-sizing: border-box;
       }
 
       button {
-        padding: 14px 28px; font-size: 16px; border: none; border-radius: 25px;
+        padding: 14px 28px; font-size: 15px; border: none; border-radius: 25px;
         background: linear-gradient(45deg, #FF5733, #FF8D1A); color: white; font-weight: bold; 
         cursor: pointer; margin-top: 25px; box-shadow: 0 5px 15px rgba(255,87,51,0.4);
         transition: all 0.2s ease; pointer-events: auto; width: 100%;
       }
-      button:active { transform: scale(0.97); box-shadow: 0 2px 5px rgba(255,87,51,0.2); }
+      button:active { transform: scale(0.97); }
       
       @keyframes escanear { 0%, 100% { top: 0%; } 50% { top: 100%; } }
       @keyframes procesar { 0% { top: 20%; opacity: 0.4; } 100% { top: 80%; opacity: 1; } }
-      @keyframes latido { 0% { transform: scale(0.9); filter: drop-shadow(0 0 2px rgba(255,255,255,0.2)); } 100% { transform: scale(1.1); filter: drop-shadow(0 0 15px rgba(255,141,26,0.6)); } }
+      @keyframes latido { 0% { transform: scale(0.92); filter: drop-shadow(0 0 2px rgba(255,141,26,0.2)); } 100% { transform: scale(1.08); filter: drop-shadow(0 0 15px rgba(255,141,26,0.6)); } }
     </style>
   </head>
   <body>
 
+    <!-- El video corre continuamente de fondo sin interrupciones -->
     <video id="video-camara" autoplay playsinline muted></video>
 
     <div id="guia-escaneo">
@@ -76,31 +108,51 @@
       </p>
     </div>
 
-    <!-- TARJETA MEJORADA CON ICONO DE LATIDO Y ESTILOS PULIDOS -->
-    <div id="mensaje-aliento">
-      <div class="icono-animado">✨💛✨</div>
-      <h2 style="font-size: 24px; margin: 10px 0 5px 0; background: linear-gradient(45deg, #FFF, #FF8D1A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">¡Sintonía Exitosa!</h2>
-      <p style="font-size: 16px; line-height: 1.6; margin: 10px 0 0 0; color: #f0f0f0; font-weight: 400;">
-        ¡Lo estás haciendo genial!<br>
-        <span style="color: #FF8D1A; font-weight: bold;">Tu sonrisa cambia el día.</span>
-      </p>
-      <button onclick="window.location.reload()">Volver a Escanear</button>
+    <!-- ESCENA QUE ENCAPSULA EL EFECTO 3D -->
+    <div id="escena-holograma">
+      <div id="mensaje-aliento">
+        <div class="icono-animado">✨🛸✨</div>
+        <h2 class="titulo-holograma">¡Sintonía Exitosa!</h2>
+        
+        <!-- Mensaje extendido y nutritivo -->
+        <p style="font-size: 14.5px; line-height: 1.6; margin: 0; color: #e2e8f0; font-weight: 400;">
+          A veces el ritmo del día avanza tan rápido que olvidamos detenernos a asimilar el camino recorrido. Respira hondo. Estás gestionando tus responsabilidades con gran dedicación y cada pequeño esfuerzo diario es valioso. Confía en tu proceso y avanza a tu propio tiempo.
+        </p>
+        
+        <!-- Contenedor dinámico de misiones -->
+        <div class="caja-mision">
+          <strong style="color: #FF8D1A; font-size: 11px; display: block; margin-bottom: 5px; letter-spacing: 0.5px; text-transform: uppercase;">Misión de Bienestar</strong>
+          <span id="texto-mision" style="color: #cbd5e1; font-size: 13.5px; line-height: 1.45;">Analizando enfoque...</span>
+        </div>
+        
+        <!-- Botón con restauración por software (Sin apagar la cámara) -->
+        <button onclick="reestablecerPortal()">Volver a Escanear</button>
+      </div>
     </div>
 
     <script>
       const video = document.getElementById('video-camara');
+      const escenaHolograma = document.getElementById('escena-holograma');
       const mensaje = document.getElementById('mensaje-aliento');
       const guia = document.getElementById('guia-escaneo');
       const mira = document.getElementById('mira');
       const laser = document.getElementById('laser');
       const textoEstado = document.getElementById('texto-estado');
       const textoInferior = document.getElementById('texto-inferior');
+      const textoMision = document.getElementById('texto-mision');
       
       let escaneoActivo = true;
       let detectorNativo;
 
-      // 🛑 REGLA DE SEGURIDAD: Reemplaza esta URL exacta por el enlace de TU página web de GitHub Pages
-      // Ejemplo: "https://github.io"
+      // Banco de consejos nutritivos variables
+      const misionesDiarias = [
+        "Dedica 2 minutos a estirar los hombros y realizar respiraciones profundas.",
+        "Piensa en tres detalles sencillos por los que sientas gratitud en este momento.",
+        "Regálate una pausa corta, toma un vaso con agua y retoma tus tareas con calma.",
+        "Aléjate de las pantallas por 3 minutos para restaurar tu claridad y enfoque mental.",
+        "Reconoce tu esfuerzo de hoy. Has resuelto retos complejos y eso demuestra tu valía."
+      ];
+
       const MI_URL_OFICIAL = window.location.href; 
 
       if ('BarcodeDetector' in window) {
@@ -130,17 +182,16 @@
           detectorNativo.detect(video)
           .then(barcodes => {
             if (barcodes.length > 0 && escaneoActivo) {
-              
-              // Extraemos el texto plano o enlace que contiene el QR físico capturado
               const contenidoQR = barcodes[0].rawValue;
               
-              // VALIDACIÓN ESTRICTA: ¿El QR escaneado es el de nuestra propia web?
-              // Usamos 'includes' para cerciorarnos de que apunte a nuestro hosting de GitHub o dominio
-              if (contenidoQR.includes("github.io") || contenidoQR === MI_URL_OFICIAL) {
-                escaneoActivo = false; 
+              if (contenidoQR.includes("github.io") || contenidoQR === MI_URL_OFICIAL || contenidoQR.includes("localhost") || contenidoQR.includes("127.0.0.1")) {
+                escaneoActivo = false; // Bloquea lecturas secundarias lógicas
+                
+                // Inyectamos una misión de aliento aleatoria cada vez que lee el QR
+                const indice = Math.floor(Math.random() * misionesDiarias.length);
+                textoMision.innerText = misionesDiarias[indice];
+
                 ejecutarTransicionMagica();
-              } else {
-                console.log("QR ignorado por no ser el oficial del Portal.");
               }
             }
           })
@@ -161,12 +212,37 @@
           guia.style.opacity = '0';
           setTimeout(() => {
             guia.style.display = 'none';
-            const stream = video.srcObject;
-            if (stream) stream.getTracks().forEach(track => track.stop());
-            mensaje.classList.add('mostrar-mensaje');
-          }, 400);
-        }, 1500);
-      }
-    </script>
-  </body>
-</html>
+            
+// ELIMINADO EL TRACK.STOP: La cámara se queda encendida de fondo permanentemente
+escenaHolograma.style.display = 'block';
+setTimeout(() => {
+    mensaje.classList.add('mostrar-mensaje');
+    }, 50);
+    }, 400);
+}, 1500);
+}
+
+// NUEVO RESTABLECIMIENTO EXCLUSIVO POR SOFTWARE (Mantiene la cámara encendida)
+window.reestablecerPortal = function() {
+    // 1. Regresa la tarjeta en 3D al fondo suavemente
+    mensaje.classList.remove('mostrar-mensaje');
+
+    setTimeout(() => {
+        escenaHolograma.style.display = 'none';
+
+        // 2. Limpia los colores de la mira regresándolos a verde
+        mira.classList.remove('procesando-mira');
+        laser.classList.remove('procesando-laser');
+        textoEstado.style.color = '#00ff96';
+        textoEstado.innerText = 'MODO ESCÁNER ACTIVO';
+        textoInferior.innerText = 'Apunta al QR físico para activar tu mensaje';
+
+        // 3. Reactiva la guía visual
+        guia.style.display = 'flex';
+        setTimeout(() => { guia.style.opacity = '1'; }, 50);
+
+        // 4. Reactiva el bucle lógico del escáner y los fotogramas
+        escaneoActivo = true;
+        requestAnimationFrame(bucleDeteccionNativa);
+        }, 600); // Espera que termine el desvanecido físico de la tarjeta
+        }
