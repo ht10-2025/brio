@@ -15,6 +15,7 @@
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         display: flex; flex-direction: column; justify-content: space-between; align-items: center;
         padding: 40px 20px; box-sizing: border-box; z-index: 5; pointer-events: none;
+        opacity: 1;
         transition: opacity 0.5s ease;
       }
       .cuadro-mira {
@@ -31,7 +32,7 @@
       .procesando-mira { border-color: #FF8D1A !important; box-shadow: 0 0 25px rgba(255, 141, 26, 0.6) !important; }
       .procesando-laser { background-color: #FF8D1A !important; box-shadow: 0 0 15px #FF8D1A !important; animation: procesar 0.3s infinite alternate !important; }
 
-      /* ESCENA TRIDIMENSIONAL TRIDIMENSIONAL (Inicio del 3D futuro) */
+      /* ESCENA TRIDIMENSIONAL */
       #espacio-3d {
         display: none; position: absolute; width: 100%; height: 100%;
         perspective: 1000px; perspective-origin: center; z-index: 10;
@@ -49,7 +50,7 @@
         transform: translate(-50%, -50%) rotateX(45deg) translateZ(-200px);
         transform-style: preserve-3d;
         opacity: 0;
-        transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1), opacity 1s ease;
+        transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.6s ease;
       }
 
       .proyectar-3d {
@@ -57,7 +58,6 @@
         opacity: 1 !important;
       }
 
-      /* Título corregido: Versión estándar + Prefijo para evitar advertencias en VS Code */
       .titulo-brillante {
         font-size: 24px; margin: 0 0 15px 0; font-weight: 800; letter-spacing: 0.5px;
         background: linear-gradient(45deg, #FFF, #FF8D1A);
@@ -83,9 +83,7 @@
   </head>
   <body>
 
-    <!-- Video de la cámara nativa de fondo -->
     <video id="video-camara" autoplay playsinline muted></video>
-    <!-- Canvas auxiliar oculto que no genera demoras de renderizado -->
     <canvas id="canvas-invisible"></canvas>
 
     <div id="guia-escaneo">
@@ -113,11 +111,11 @@
           <span id="texto-consejo" style="color: #cbd5e1; font-size: 13.5px; line-height: 1.45;">Cargando...</span>
         </div>
 
-        <button onclick="window.location.reload()">Cerrar Portal</button>
+        <!-- El botón ahora ejecuta la función de reactivación suave -->
+        <button onclick="reestablecerEscaner()">Volver a Escanear</button>
       </div>
     </div>
 
-    <!-- CARGAMOS LA LIBRERÍA DE DETECCIÓN MEDIANTE UN MÓDULO SEGURO E INDEPENDIENTE DE UNPJK -->
     <script type="module">
       import QrScanner from "https://jsdelivr.net";
 
@@ -132,6 +130,7 @@
       const textoConsejo = document.getElementById('texto-consejo');
       
       let escaneoActivo = true;
+      let qrScanner;
 
       const misionesBienestar = [
         "Dedica 2 minutos a relajar los hombros y respirar hondo de forma consciente.",
@@ -141,45 +140,41 @@
         "Reconoce tu avance de hoy. Has gestionado situaciones complejas y eso cuenta mucho."
       ];
 
-      // Instanciamos el lector atado directamente al elemento de video
-      const qrScanner = new QrScanner(
+      // Instanciamos el lector principal
+      qrScanner = new QrScanner(
         video,
         result => validarCodigo(result),
         {
-          preferredCamera: 'environment', // Obliga el uso del lente trasero
+          preferredCamera: 'environment',
           highlightScanRegion: false,
           highlightCodeOutline: false
         }
       );
 
-      // Encendemos la cámara con el motor modular estable
-      qrScanner.start().catch(err => {
-        console.error(err);
-        // Respaldo clásico si el motor modular es bloqueado de golpe
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then(stream => { video.srcObject = stream; video.play(); });
-      });
+      // Arrancamos el flujo inicial
+      arrancarMotor();
 
-      // FUNCIÓN DE CONTROL DE ACCESO ESTRICTO
+      function arrancarMotor() {
+        qrScanner.start().catch(err => {
+          console.error(err);
+          navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+          .then(stream => { video.srcObject = stream; video.play(); });
+        });
+      }
+
       function validarCodigo(result) {
         if (!escaneoActivo) return;
 
-        // Extraemos la URL decodificada del QR capturado
         const textoDecodificado = result.data ? result.data : result;
 
-        // VERIFICACIÓN ESTRICTA: Solo activa el naranja si el QR contiene tu hosting oficial
         if (textoDecodificado.includes("github.io") || textoDecodificado.includes("localhost") || textoDecodificado.includes("127.0.0.1")) {
           escaneoActivo = false; 
-          qrScanner.stop(); // Apaga la lectura para evitar bucles
+          qrScanner.stop(); // Pausa la lectura en segundo plano
 
-          // Seteamos la misión aleatoria
           const indiceAleatorio = Math.floor(Math.random() * misionesBienestar.length);
           textoConsejo.innerText = misionesBienestar[indiceAleatorio];
 
-          // Disparamos la animación del láser naranja progresivo
           ejecutarTransicionMagica();
-        } else {
-          console.log("QR extraño detectado e ignorado: ", textoDecodificado);
         }
       }
 
@@ -195,16 +190,40 @@
           setTimeout(() => {
             guia.style.display = 'none';
             
-            // Apagamos la cámara de fondo de forma limpia
-            const stream = video.srcObject;
-            if (stream) stream.getTracks().forEach(track => track.stop());
-            
-            // ACTIVAMOS LA PROYECCIÓN TRIDIMENSIONAL DESDE EL FONDO HACIA ADELANTE
+            // ELIMINADA la línea que apagaba la cámara nativa (track.stop) 
+            // para que el lente se quede encendido esperando en el fondo de la tarjeta.
+
             espacio3D.style.display = 'block';
             setTimeout(() => {
               tarjeta.classList.add('proyectar-3d');
             }, 50);
 
           }, 400);
-}, 1500);
-}
+        }, 1500);
+      }
+
+      // NUEVA FUNCIÓN DE RESETEO INTERNO Y FLUIDO
+      window.reestablecerEscaner = function() {
+        // 1. Desvanecemos la tarjeta 3D hacia el fondo
+        tarjeta.classList.remove('proyectar-3d');
+        
+        setTimeout(() => {
+          espacio3D.style.display = 'none';
+          
+          // 2. Restauramos los estilos originales verdes del escáner
+          mira.classList.remove('procesando-mira');
+          laser.classList.remove('procesando-laser');
+          textoEstado.style.color = '#00ff96';
+          textoEstado.innerText = 'MODO ESCÁNER ACTIVO';
+          textoInferior.style.background = 'rgba(0,0,0,0.7)';
+          textoInferior.innerText = 'Apunta al QR físico para activar tu mensaje';
+          
+          // 3. Volvemos a mostrar la guía visual
+          guia.style.display = 'flex';
+          setTimeout(() => { guia.style.opacity = '1'; }, 50);
+
+          // 4. Reactivamos el motor de escaneo y el bucle
+          escaneoActivo = true;
+          arrancarMotor();
+        }, 600);
+    }
