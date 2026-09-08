@@ -7,7 +7,7 @@
     <style>
       html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; background-color: #000; }
       
-      /* La cámara real ocupará todo el fondo de forma fluida */
+      /* Video nativo de la cámara de fondo */
       #video-camara { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
 
       /* Interfaz de guía visual verde */
@@ -28,7 +28,7 @@
       /* Tarjeta del Mensaje Sorpresa */
       #mensaje-aliento {
         display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        background: rgba(15, 32, 39, 0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        background: rgba(15, 32, 39, 0.96); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
         border: 2px solid #FF8D1A; padding: 30px 20px; border-radius: 24px; text-align: center;
         width: 280px; box-sizing: border-box; box-shadow: 0 15px 35px rgba(0,0,0,0.6); z-index: 10;
       }
@@ -40,8 +40,8 @@
   </head>
   <body>
 
-    <!-- La cámara se mantendrá encendida aquí abajo todo el tiempo -->
-    <video id="video-camara"></video>
+    <!-- La cámara se proyectará aquí -->
+    <video id="video-camara" autoplay playsinline muted></video>
 
     <!-- Guía del visor sobre la pantalla -->
     <div id="guia-escaneo">
@@ -52,7 +52,7 @@
       </p>
     </div>
 
-    <!-- El Mensaje Oculto que SOLO saldrá tras leer un QR real -->
+    <!-- El Mensaje Oculto que SOLO saldrá si el motor lee un QR físico -->
     <div id="mensaje-aliento">
       <span style="font-size: 32px;">✨</span>
       <h2 style="font-size: 22px; margin: 10px 0; color: #FF8D1A;">¡Validación Correcta!</h2>
@@ -62,39 +62,70 @@
       <button onclick="window.location.reload()" style="margin-top: 20px; padding: 12px 24px; background: linear-gradient(45deg, #FF5733, #FF8D1A); color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(255,87,51,0.3);">Volver a Escanear</button>
     </div>
 
-    <!-- Invocamos la librería definitiva de alto rendimiento como un módulo de confianza del navegador -->
-    <script type="module">
-      import QrScanner from "https://jsdelivr.net";
-
+    <script>
       const video = document.getElementById('video-camara');
       const mensaje = document.getElementById('mensaje-aliento');
       const guia = document.getElementById('guia-escaneo');
+      let escaneoActivo = true;
+      let detectorNativo;
 
-      // Instanciamos el lector atándolo al elemento de video nativo
-      const qrScanner = new QrScanner(
-        video,
-        result => onScanSuccess(result),
-        {
-          preferredCamera: 'environment', // Forza la cámara trasera en móviles
-          highlightScanRegion: false,     // Desactivamos luces redundantes
-          highlightCodeOutline: false
-        }
-      );
+      // 1. Verificamos si el navegador posee soporte nativo para leer códigos
+      if ('BarcodeDetector' in window) {
+        detectorNativo = new BarcodeDetector({ formats: ['qr_code'] });
+      } else {
+        alert("Tu navegador no soporta el motor nativo de escaneo. Inténtalo desde un celular con Chrome o Brave actualizado.");
+      }
 
-      // Encendemos el motor de la cámara de inmediato
-      qrScanner.start().catch(err => {
-        console.error("Fallo al inicializar la cámara:", err);
-        alert("Asegúrate de permitir el acceso a la cámara en tu navegador.");
+      // 2. Encendemos la cámara (Usa trasera en celular, y frontal o webcam predeterminada en PC)
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+      .then(conectarStream)
+      .catch(function() {
+        navigator.mediaDevices.getUserMedia({ video: true })
+        .then(conectarStream)
+        .catch(function() {
+          alert("Error crítico al acceder a la cámara. Por favor concede los permisos en tu navegador.");
+        });
       });
 
-      // Esta función SOLO se ejecutará si el motor decodifica datos reales de un QR
-      function onScanSuccess(result) {
-        // Detiene el análisis para evitar lecturas duplicadas
-        qrScanner.stop(); 
+      function conectarStream(stream) {
+        video.srcObject = stream;
+        video.play();
         
-        // Muestra la tarjeta del mensaje y oculta las líneas guía
-        guia.style.display = 'none';
-        mensaje.classList.add('mostrar-mensaje');
+        // Ejecutamos el bucle nativo una vez que el video cargue por completo sus dimensiones
+        video.addEventListener('loadedmetadata', function() {
+          if (detectorNativo) {
+            bucleDeteccionNativa();
+          }
+        });
+      }
+
+      // 3. Motor de bucle de escaneo a nivel de hardware
+      function bucleDeteccionNativa() {
+        if (!escaneoActivo) return;
+
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+          // El método "detect" analiza directamente el fotograma del elemento de video nativo
+          detectorNativo.detect(video)
+          .then(barcodes => {
+            if (barcodes.length > 0 && escaneoActivo) {
+              escaneoActivo = false; // Rompemos el bucle
+              
+              // Apagamos la cámara de fondo
+              const stream = video.srcObject;
+              if (stream) stream.getTracks().forEach(track => track.stop());
+              
+              // Desplegamos el mensaje
+              guia.style.display = 'none';
+              mensaje.classList.add('mostrar-mensaje');
+            }
+          })
+          .catch(err => console.error("Error en detección de hardware: ", err));
+        }
+
+        // Corre el siguiente análisis atado al rendimiento del celular
+        if (escaneoActivo) {
+          requestAnimationFrame(bucleDeteccionNativa);
+        }
       }
     </script>
   </body>
