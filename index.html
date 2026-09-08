@@ -5,14 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Portal AR Inicial ✨</title>
     
-    <!-- Cargamos jsQR desde un CDN confiable de código abierto -->
-    <script src="https://jsdelivr.net"></script>
+    <!-- Cargamos la librería líder para escaneo de video en tiempo real -->
+    <script src="https://unpkg.com" type="text/javascript"></script>
     
     <style>
       html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; background-color: #000; }
-      #video-camara { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
-      #canvas-oculto { display: none; }
+      
+      /* Contenedor donde se renderizará el video nativo */
+      #lector-qr { width: 100% !important; height: 100% !important; position: fixed; top: 0; left: 0; object-fit: cover; z-index: 1; }
+      #lector-qr video { width: 100% !important; height: 100% !important; object-fit: cover !important; }
 
+      /* Capa de guía visual */
       #guia-escaneo {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         display: flex; flex-direction: column; justify-content: space-between; align-items: center;
@@ -23,6 +26,7 @@
         box-shadow: 0 0 15px rgba(0, 255, 150, 0.4); margin: auto;
       }
 
+      /* Mensaje sorpresa flotante */
       #mensaje-aliento {
         display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
         background: rgba(15, 32, 39, 0.94); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -35,8 +39,8 @@
   </head>
   <body>
 
-    <video id="video-camara" autoplay playsinline muted></video>
-    <canvas id="canvas-oculto"></canvas>
+    <!-- El motor inyectará el video directamente en este bloque -->
+    <div id="lector-qr"></div>
 
     <div id="guia-escaneo">
       <h2 style="margin: 0; font-size: 18px; color: #00ff96; text-shadow: 0 2px 4px #000; letter-spacing: 1px;">MODO ESCÁNER ACTIVO</h2>
@@ -46,6 +50,7 @@
       </p>
     </div>
 
+    <!-- El Mensaje Oculto -->
     <div id="mensaje-aliento">
       <span style="font-size: 32px;">✨</span>
       <h2 style="font-size: 22px; margin: 10px 0; color: #FF8D1A;">¡Validación Correcta!</h2>
@@ -56,63 +61,45 @@
     </div>
 
     <script>
-      const video = document.getElementById('video-camara');
-      const canvas = document.getElementById('canvas-oculto');
-      const ctx = canvas.getContext('2d');
       const mensaje = document.getElementById('mensaje-aliento');
       const guia = document.getElementById('guia-escaneo');
-      let escaneoActivo = true;
 
-      // Intentamos primero la cámara trasera (para celulares)
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-      .then(conectarStream)
-      .catch(function() {
-        // Si falla (como en PC que no hay cámara trasera), usa cualquier cámara disponible
-        navigator.mediaDevices.getUserMedia({ video: true })
-        .then(conectarStream)
-        .catch(function() {
-          alert("Asegúrate de dar permisos de cámara en tu navegador.");
-        });
+      // Inicializamos el lector configurando un tamaño de cuadro de escaneo (fps óptimos)
+      const html5QrcodeScanner = new Html5Qrcode("lector-qr");
+
+      // Intentamos encender la cámara de forma fluida
+      Html5Qrcode.getCameras().then(cameras => {
+        if (cameras && cameras.length > 0) {
+          // Si es celular detecta la cámara trasera automáticamente, si es PC usa la predeterminada
+          let cameraId = cameras[0].id;
+          if(cameras.length > 1) {
+            // Busca la cámara trasera ("back" o "environment") en dispositivos móviles
+            const trasera = cameras.find(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('environment'));
+            if(trasera) cameraId = trasera.id;
+          }
+
+          // Arranca el flujo de video a 24 cuadros por segundo (Carga inmediata)
+          html5QrcodeScanner.start(
+            cameraId, 
+            { fps: 24, qrbox: { width: 250, height: 250 } },
+            onScanSuccess
+          ).catch(err => {
+            console.error("Error al iniciar flujo", err);
+          });
+        }
+      }).catch(err => {
+        alert("Asegúrate de otorgar permisos de cámara en tu navegador.");
       });
 
-      function conectarStream(stream) {
-        video.srcObject = stream;
-        video.setAttribute("playsinline", true);
-        video.play();
-        
-        // CRUCIAL: Esperamos a que el video tenga dimensiones reales antes de escanear
-        video.addEventListener('loadedmetadata', function() {
-          requestAnimationFrame(bucleEscaneo);
+      // Esta función se activa en el milisegundo exacto en que detecta CUALQUIER código QR
+      function onScanSuccess(decodedText, decodedResult) {
+        // Detenemos la cámara de inmediato para ahorrar batería e impedir lecturas dobles
+        html5QrcodeScanner.stop().then(() => {
+          guia.style.display = 'none';
+          mensaje.classList.add('mostrar-mensaje');
+        }).catch(err => {
+          console.error("Fallo al detener la cámara", err);
         });
-      }
-
-      function bucleEscaneo() {
-        if (!escaneoActivo) return;
-
-        if (video.readyState === video.HAVE_ENOUGH_DATA) {
-          // Optimizamos bajando la resolución interna del canvas para que procese rápido en móviles
-          const anchoProcesado = video.videoWidth / 1.5;
-          const altoProcesado = video.videoHeight / 1.5;
-          
-          canvas.width = anchoProcesado;
-          canvas.height = altoProcesado;
-          
-          ctx.drawImage(video, 0, 0, anchoProcesado, altoProcesado);
-          const imageData = ctx.getImageData(0, 0, anchoProcesado, altoProcesado);
-          
-          // Ejecuta jsQR sobre los píxeles optimizados
-          const codigoQR = jsQR(imageData.data, imageData.width, imageData.height, {
-            inversionAttempts: "dontInvert"
-          });
-
-          if (codigoQR) {
-            escaneoActivo = false;
-            guia.style.display = 'none';
-            mensaje.classList.add('mostrar-mensaje');
-            return;
-          }
-        }
-        requestAnimationFrame(bucleEscaneo);
       }
     </script>
   </body>
