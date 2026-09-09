@@ -118,7 +118,7 @@
       animation: procesar 0.3s infinite alternate !important;
     }
 
-    /* ESCENA TRIDIMENSIONAL PREMIUM */
+    /* ESCENA TRIDIMENSIONAL PREMIUM - Con viñeta oscura para resaltar destellos */
     #escena-3d {
       display: none;
       position: absolute;
@@ -127,7 +127,7 @@
       perspective: 1200px;
       perspective-origin: center;
       z-index: 10;
-      background: rgba(0, 0, 0, 0.3);
+      background: radial-gradient(circle, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.65) 80%);
     }
 
     /* CONTENEDOR DE PARTÍCULAS ESPACIALES */
@@ -141,10 +141,11 @@
       left: 0;
     }
 
+    /* Partículas robustecidas con núcleo brillante y súper neón */
     .particula {
       position: absolute;
-      width: 8px;
-      height: 8px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
       opacity: 0;
       animation: lanzarParticula var(--duracion) ease-out infinite;
@@ -252,19 +253,19 @@
       }
     }
 
-    /* Nueva animación nativa de eyección 3D */
+    /* Animación elástica de eyección tridimensional */
     @keyframes lanzarParticula {
       0% {
-        transform: translate3d(var(--x1), var(--y1), -50px);
+        transform: translate3d(var(--x1), var(--y1), -100px) scale(0.3);
         opacity: 0;
       }
 
-      15% {
+      20% {
         opacity: 1;
       }
 
       100% {
-        transform: translate3d(var(--x2), var(--y2), var(--z2));
+        transform: translate3d(var(--x2), var(--y2), var(--z2)) scale(1.2);
         opacity: 0;
       }
     }
@@ -297,7 +298,6 @@
     </p>
   </div>
 
-  <!-- ESCENA 3D HOLOGRÁFICA ENRIQUECIDA -->
   <div id="escena-3d">
     <div id="contenedor-particulas"></div>
 
@@ -411,7 +411,7 @@
           document.getElementById('guia-escaneo').style.display = 'none';
           document.getElementById('escena-3d').style.display = 'block';
 
-          // DISPARAMOS LOS EFECTOS ESPECIALES DE PARTÍCULAS
+          // DISPARAMOS LOS EFECTOS ESPECIALES DE PARTÍCULAS MEJORADAS
           generarParticulasAR();
 
           setTimeout(() => { document.getElementById('mensaje-aliento').classList.add('mostrar-mensaje'); }, 50);
@@ -419,38 +419,37 @@
       }, 1500);
     }
 
-    // MOTOR OPTIMIZADO PARA INYECCIÓN DE PARTÍCULAS EN EL BODY
+    // NUEVO MOTOR DE LUMINOSIDAD PARA LAS PARTÍCULAS
     function generarParticulasAR() {
       const contenedor = document.getElementById('contenedor-particulas');
       contenedor.innerHTML = '';
-      const colores = ['#00ff96', '#FF8D1A', '#00b3ff', '#ff007f'];
+      const colores = ['rgba(0, 255, 150, 1)', 'rgba(255, 141, 26, 1)', 'rgba(0, 179, 255, 1)', 'rgba(255, 0, 127, 1)'];
 
-      // Coordenadas fijas centrales basadas en la ventana del navegador
       const x1 = window.innerWidth / 2;
       const y1 = window.innerHeight / 2;
 
-      for (let i = 0; i < 45; i++) {
+      // Subimos a 50 partículas con mayor potencia visual
+      for (let i = 0; i < 50; i++) {
         const p = document.createElement('div');
         p.className = 'particula';
 
-        // Trayectorias expansivas en el espacio tridimensional
-        const x2 = x1 + (Math.random() - 0.5) * 500;
-        const y2 = y1 + (Math.random() - 0.5) * 600;
-        const z2 = Math.random() * 250;
+        const x2 = x1 + (Math.random() - 0.5) * 600;
+        const y2 = y1 + (Math.random() - 0.5) * 700;
+        const z2 = Math.random() * 300; // Mayor profundidad de proyección hacia el frente
 
-        // Inyectamos las variables directamente como estilos en línea CSS
         p.style.setProperty('--x1', `${x1}px`);
         p.style.setProperty('--y1', `${y1}px`);
         p.style.setProperty('--x2', `${x2}px`);
         p.style.setProperty('--y2', `${y2}px`);
         p.style.setProperty('--z2', `${z2}px`);
 
-        // Parámetros de tiempo y renderizado aleatorios
-        p.style.setProperty('--duracion', `${1.5 + Math.random() * 2}s`);
-        p.style.setProperty('--retraso', `${Math.random() * 0.8}s`);
+        p.style.setProperty('--duracion', `${1.8 + Math.random() * 2.2}s`);
+        p.style.setProperty('--retraso', `${Math.random() * 1.2}s`);
 
-        p.style.background = colores[Math.floor(Math.random() * colores.length)];
-        p.style.boxShadow = `0 0 12px ${p.style.background}`;
+        const colorBase = colores[Math.floor(Math.random() * colores.length)];
+        // Efecto de núcleo brillante con radial-gradient
+        p.style.background = `radial-gradient(circle, #ffffff 20%, ${colorBase} 70%)`;
+        p.style.boxShadow = `0 0 20px ${colorBase}, 0 0 40px ${colorBase}`; // Doble halo neón hiper-notable
 
         contenedor.appendChild(p);
       }
