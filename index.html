@@ -399,8 +399,11 @@
         textoInferior.style.background = 'rgba(0,0,0,0.7)';
         textoInferior.innerText = 'Apunta al QR físico para activar tu mensaje';
         guia.style.display = 'flex';
-        setTimeout(() => {guia.style.opacity = '1';}, 50);
+        setTimeout(() => { guia.style.opacity = '1'; }, 50);
         escaneoActivo = true;
         requestAnimationFrame(bucleDeteccionNativa);
       }, 600);
     }
+  </script>
+</body>
+</html>
