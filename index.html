@@ -27,7 +27,7 @@
       z-index: 1;
     }
 
-    /* PANTALLA DE BIENVENIDA OBLIGATORIA PARA FORZAR AL NAVEGADOR A DESBLOQUEAR LA CÁMARA */
+    /* Pantalla de bienvenida obligatoria para forzar los permisos */
     #pantalla-bienvenida {
       position: fixed;
       top: 0;
@@ -55,9 +55,10 @@
       color: #000;
       font-weight: bold;
       cursor: pointer;
-      box-shadow: 0 5px 25px rgba(0, 255, 150, 0.4);
       margin-top: 30px;
+      box-shadow: 0 5px 25px rgba(0, 255, 150, 0.4);
       transition: transform 0.2s;
+      pointer-events: auto;
     }
 
     .boton-magia:active {
@@ -310,19 +311,15 @@
       alert("Tu navegador no soporta el motor nativo de escaneo.");
     }
 
-    // FUNCIÓN CLAVE: Se activa ÚNICAMENTE al hacer clic en el botón, obligando al navegador a reaccionar
+    // EXPOSICIÓN GLOBAL ABSOLUTA: Asegura que el botón de HTML encuentre la función de inmediato
     window.solicitarAccesoCamara = function () {
       navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
         .then(function (stream) {
-          // Ocultamos la pantalla de bienvenida
           bienvenida.style.display = 'none';
-          // Mostramos la interfaz del radar verde
           guia.style.display = 'flex';
-
           conectarStream(stream);
         })
         .catch(function () {
-          // Intento secundario si el móvil bloquea la cámara trasera estricta
           navigator.mediaDevices.getUserMedia({ video: true })
             .then(function (stream) {
               bienvenida.style.display = 'none';
@@ -330,7 +327,7 @@
               conectarStream(stream);
             })
             .catch(function () {
-              alert("No se pudo desbloquear la cámara. Ve a los ajustes de tu celular, borra el historial de Chrome/Brave y vuelve a entrar para liberar el permiso.");
+              alert("Acceso a la cámara denegado. Revisa el candado de la URL.");
             });
         });
     }
@@ -349,19 +346,25 @@
       if (video.readyState === video.HAVE_ENOUGH_DATA) {
         detectorNativo.detect(video)
           .then(barcodes => {
-            // CORRECCIÓN MATEMÁTICA: Usamos el extractor nativo de tu código original funcional barcodes.rawValue
+            // CORRECCIÓN MATEMÁTICA: barcodes[0].rawValue extrae de forma impecable el array nativo
             if (barcodes && barcodes.length > 0 && escaneoActivo) {
-              const contenidoQR = barcodes.rawValue;
+
+              const contenidoQR = barcodes[0].rawValue;
+
               if (contenidoQR.includes("github.io") || contenidoQR === MI_URL_OFICIAL || contenidoQR.includes("localhost") || contenidoQR.includes("127.0.0.1")) {
                 escaneoActivo = false;
+
                 const indice = Math.floor(Math.random() * misionesDiarias.length);
                 textoMision.innerText = misionesDiarias[indice];
+
                 ejecutarTransicionMagica();
               }
             }
           })
+
           .catch(err => console.error(err));
       }
+
       if (escaneoActivo) { requestAnimationFrame(bucleDeteccionNativa); }
     }
 
