@@ -118,7 +118,7 @@
       animation: procesar 0.3s infinite alternate !important;
     }
 
-    /* ESCENA TRIDIMENSIONAL PREMIUM - Con viñeta oscura para resaltar destellos */
+    /* ESCENA TRIDIMENSIONAL PREMIUM - Capa cinematográfica de aislamiento */
     #escena-3d {
       display: none;
       position: absolute;
@@ -127,36 +127,24 @@
       perspective: 1200px;
       perspective-origin: center;
       z-index: 10;
-      background: radial-gradient(circle, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.65) 80%);
+      background: radial-gradient(circle, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.75) 85%);
     }
 
-    /* CONTENEDOR DE PARTÍCULAS ESPACIALES */
-    #contenedor-particulas {
+    /* LIENZO GRÁFICO PARA EL MOTOR DE PARTÍCULAS CINEMÁTICAS */
+    #lienzo-efectos {
       position: absolute;
-      width: 100%;
-      height: 100%;
-      transform-style: preserve-3d;
-      pointer-events: none;
       top: 0;
       left: 0;
-    }
-
-    /* Partículas robustecidas con núcleo brillante y súper neón */
-    .particula {
-      position: absolute;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      opacity: 0;
-      animation: lanzarParticula var(--duracion) ease-out infinite;
-      animation-delay: var(--retraso);
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
     }
 
     #mensaje-aliento {
       position: absolute;
       top: 50%;
       left: 50%;
-      background: linear-gradient(135deg, rgba(15, 32, 39, 0.96) 0%, rgba(32, 58, 67, 0.96) 100%);
+      background: linear-gradient(135deg, rgba(15, 32, 39, 0.97) 0%, rgba(32, 58, 67, 0.97) 100%);
       backdrop-filter: blur(25px);
       -webkit-backdrop-filter: blur(25px);
       border: 1px solid rgba(255, 255, 255, 0.15);
@@ -165,7 +153,7 @@
       text-align: center;
       width: 330px;
       box-sizing: border-box;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
       transform: translate(-50%, -50%) rotateX(35deg) translateZ(-150px);
       transform-style: preserve-3d;
       opacity: 0;
@@ -252,23 +240,6 @@
         transform: scale(1.08);
       }
     }
-
-    /* Animación elástica de eyección tridimensional */
-    @keyframes lanzarParticula {
-      0% {
-        transform: translate3d(var(--x1), var(--y1), -100px) scale(0.3);
-        opacity: 0;
-      }
-
-      20% {
-        opacity: 1;
-      }
-
-      100% {
-        transform: translate3d(var(--x2), var(--y2), var(--z2)) scale(1.2);
-        opacity: 0;
-      }
-    }
   </style>
 </head>
 
@@ -298,8 +269,10 @@
     </p>
   </div>
 
+  <!-- ESCENA 3D ENRIQUECIDA CON LIENZO DE RENDERIZADO -->
   <div id="escena-3d">
-    <div id="contenedor-particulas"></div>
+    <!-- El lienzo Canvas ocupará todo el fondo proyectando las ráfagas cinemáticas -->
+    <canvas id="lienzo-efectos"></canvas>
 
     <div id="mensaje-aliento">
       <div class="icono-flotante">✨🛸✨</div>
@@ -325,6 +298,12 @@
     let escaneoActivo = true;
     let detectorNativo;
     const MI_URL_OFICIAL = window.location.href;
+
+    // Configuración del Motor Gráfico de Partículas
+    const canvasEfectos = document.getElementById('lienzo-efectos');
+    const ctxEfectos = canvasEfectos.getContext('2d');
+    let particulasArray = [];
+    let animacionId;
 
     const misionesDiarias = [
       "Dedica 2 minutos a estirar los hombros y realizar respiraciones profundas.",
@@ -376,7 +355,7 @@
               if (contenidoQR.includes("github.io") || contenidoQR.includes("localhost") || contenidoQR.includes("127.0.0.1") || contenidoQR.includes("?")) {
                 escaneoActivo = false;
 
-                // LECTURA DE NOMBRE PERSONALIZADO DESDE LA URL
+                // LECTURA DE NOMBRE PERSONALIZADO
                 const urlParams = new URLSearchParams(window.location.search);
                 const nombreUsuario = urlParams.get('nombre');
 
@@ -411,53 +390,102 @@
           document.getElementById('guia-escaneo').style.display = 'none';
           document.getElementById('escena-3d').style.display = 'block';
 
-          // DISPARAMOS LOS EFECTOS ESPECIALES DE PARTÍCULAS MEJORADAS
-          generarParticulasAR();
+          // Inicializar el lienzo gráfico de alta visibilidad
+          ajustarLienzo();
+          inicializarParticulas();
+          animarParticulas();
 
           setTimeout(() => { document.getElementById('mensaje-aliento').classList.add('mostrar-mensaje'); }, 50);
         }, 400);
       }, 1500);
     }
 
-    // NUEVO MOTOR DE LUMINOSIDAD PARA LAS PARTÍCULAS
-    function generarParticulasAR() {
-      const contenedor = document.getElementById('contenedor-particulas');
-      contenedor.innerHTML = '';
-      const colores = ['rgba(0, 255, 150, 1)', 'rgba(255, 141, 26, 1)', 'rgba(0, 179, 255, 1)', 'rgba(255, 0, 127, 1)'];
+    // CLASE MATEMÁTICA PARA EL RENDERIZADO DE NEÓN ULTRA RESALTADO
+    class ParticulaAR {
+      constructor() {
+        this.x = canvasEfectos.width / 2;
+        this.y = canvasEfectos.height / 2;
+        // Mayor tamaño base de estrellas (entre 3px y 7px de radio)
+        this.size = Math.random() * 4 + 3;
+        // Velocidades de dispersión aumentadas
+        this.speedX = (Math.random() - 0.5) * 8;
+        this.speedY = (Math.random() - 0.5) * 8;
+        // Colores de alta saturación neón
+        const colores = ['#00ff96', '#FF8D1A', '#00b3ff', '#ff007f', '#ffff00'];
+        this.color = colores[Math.floor(Math.random() * colores.length)];
+        this.alpha = 1;
+        this.decay = Math.random() * 0.015 + 0.005; // Desvanecimiento suave
+      }
 
-      const x1 = window.innerWidth / 2;
-      const y1 = window.innerHeight / 2;
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.alpha -= this.decay;
+      }
 
-      // Subimos a 50 partículas con mayor potencia visual
-      for (let i = 0; i < 50; i++) {
-        const p = document.createElement('div');
-        p.className = 'particula';
+      draw() {
+        ctxEfectos.save();
+        ctxEfectos.globalAlpha = this.alpha;
+        ctxEfectos.beginPath();
+        ctxEfectos.arc(this.x, this.y, this.size, 0, Math.PI * 2);
 
-        const x2 = x1 + (Math.random() - 0.5) * 600;
-        const y2 = y1 + (Math.random() - 0.5) * 700;
-        const z2 = Math.random() * 300; // Mayor profundidad de proyección hacia el frente
+        // Efecto de Brillo Central e Hiper-Resplandor (Glow)
+        ctxEfectos.fillStyle = '#ffffff'; // Centro blanco radiante
+        ctxEfectos.shadowBlur = 25; // Súper neón denso
+        ctxEfectos.shadowColor = this.color;
+        ctxEfectos.fill();
 
-        p.style.setProperty('--x1', `${x1}px`);
-        p.style.setProperty('--y1', `${y1}px`);
-        p.style.setProperty('--x2', `${x2}px`);
-        p.style.setProperty('--y2', `${y2}px`);
-        p.style.setProperty('--z2', `${z2}px`);
+        // Capa exterior del color saturado
+        ctxEfectos.beginPath();
+        ctxEfectos.arc(this.x, this.y, this.size + 2, 0, Math.PI * 2);
+        ctxEfectos.fillStyle = this.color;
+        ctxEfectos.shadowBlur = 0; // Reset para no sobrecargar CPU
+        ctxEfectos.fill();
 
-        p.style.setProperty('--duracion', `${1.8 + Math.random() * 2.2}s`);
-        p.style.setProperty('--retraso', `${Math.random() * 1.2}s`);
-
-        const colorBase = colores[Math.floor(Math.random() * colores.length)];
-        // Efecto de núcleo brillante con radial-gradient
-        p.style.background = `radial-gradient(circle, #ffffff 20%, ${colorBase} 70%)`;
-        p.style.boxShadow = `0 0 20px ${colorBase}, 0 0 40px ${colorBase}`; // Doble halo neón hiper-notable
-
-        contenedor.appendChild(p);
+        ctxEfectos.restore();
       }
     }
 
+    function ajustarLienzo() {
+      canvasEfectos.width = window.innerWidth;
+      canvasEfectos.height = window.innerHeight;
+    }
+
+    function inicializarParticulas() {
+      particulasArray = [];
+      // Creamos una ráfaga inicial de 60 partículas
+      for (let i = 0; i < 60; i++) {
+        particulasArray.push(new ParticulaAR());
+      }
+    }
+
+    function animarParticulas() {
+      // Borrado limpio semitransparente para dejar estelas cinemáticas (Efecto ráfaga)
+      ctxEfectos.clearRect(0, 0, canvasEfectos.width, canvasEfectos.height);
+
+      // Mantener el flujo continuo inyectando nuevas estrellas en el centro
+      if (particulasArray.length < 80) {
+        particulasArray.push(new ParticulaAR());
+      }
+
+      for (let i = 0; i < particulasArray.length; i++) {
+        particulasArray[i].update();
+        particulasArray[i].draw();
+
+        // Eliminar las que ya se desvanecieron por completo
+        if (particulasArray[i].alpha <= 0) {
+          particulasArray.splice(i, 1);
+          i--;
+        }
+      }
+      animacionId = requestAnimationFrame(animarParticulas);
+    }
+
     window.reestablecerPortal = function () {
+      cancelAnimationFrame(animacionId); // Pausa el motor gráfico
+      ctxEfectos.clearRect(0, 0, canvasEfectos.width, canvasEfectos.height);
+
       document.getElementById('mensaje-aliento').classList.remove('mostrar-mensaje');
-      document.getElementById('contenedor-particulas').innerHTML = '';
 
       setTimeout(() => {
         document.getElementById('escena-3d').style.display = 'none';
@@ -465,7 +493,6 @@
         document.getElementById('laser').classList.remove('procesando-laser');
         document.getElementById('texto-estado').style.color = '#00ff96';
         document.getElementById('texto-estado').innerText = 'MODO ESCÁNER ACTIVO';
-        document.getElementById('texto-inferior').style.background = 'rgba(0,0,0,0.7)';
         document.getElementById('texto-inferior').innerText = 'Apunta al QR físico para activar tu mensaje';
         document.getElementById('guia-escaneo').style.display = 'flex';
         setTimeout(() => { document.getElementById('guia-escaneo').style.opacity = '1'; }, 50);
@@ -473,6 +500,8 @@
         requestAnimationFrame(bucleDeteccionNativa);
       }, 600);
     }
+
+    window.addEventListener('resize', ajustarLienzo);
   </script>
 </body>
 
