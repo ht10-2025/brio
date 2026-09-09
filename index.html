@@ -17,6 +17,7 @@
       background-color: #000;
     }
 
+    /* El video nativo de fondo */
     #video-camara {
       position: fixed;
       top: 0;
@@ -24,10 +25,10 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      z-index: 2;
+      z-index: 1;
     }
 
-    /* Pantalla de bienvenida obligatoria contra bloqueos de hardware */
+    /* Pantalla de bienvenida contra bloqueos pasivos */
     #pantalla-bienvenida {
       position: fixed;
       top: 0;
@@ -78,7 +79,7 @@
       align-items: center;
       padding: 40px 20px;
       box-sizing: border-box;
-      z-index: 10;
+      z-index: 5;
       pointer-events: none;
       opacity: 1;
       transition: opacity 0.5s ease;
@@ -126,7 +127,7 @@
       height: 100%;
       perspective: 1200px;
       perspective-origin: center;
-      z-index: 20;
+      z-index: 10;
       background: rgba(0, 0, 0, 0.4);
     }
 
@@ -235,16 +236,14 @@
 
 <body>
 
-  <!-- SOLUCIÓN INYECTADA EN EL BOTÓN FÍSICO: Al poner el código de hardware aquí arriba, el navegador no tiene ninguna forma de bloquearlo ni decir que no está definido -->
+  <!-- El botón físico ahora llama a la función unificada limpia -->
   <div id="pantalla-bienvenida">
     <h1
       style="font-size: 26px; margin: 0; background: linear-gradient(45deg, #fff, #00ff96); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
       ✨ Portal de Bienestar ✨</h1>
     <p style="color: #ccc; font-size: 15px; margin-top: 15px; max-width: 280px; line-height: 1.5;">Para activar los
       sensores tridimensionales y el video en tiempo real, presiona el botón de calibración.</p>
-    <button class="boton-magia"
-      onclick="navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(s){document.getElementById('pantalla-bienvenida').style.display='none';document.getElementById('guia-escaneo').style.display='flex';window.conectarStream(s);}).catch(function(){navigator.mediaDevices.getUserMedia({video:true}).then(function(s){document.getElementById('pantalla-bienvenida').style.display='none';document.getElementById('guia-escaneo').style.display='flex';window.conectarStream(s);});});">Conectar
-      Escáner</button>
+    <button class="boton-magia" onclick="solicitarAccesoCamara()">Conectar Escáner</button>
   </div>
 
   <video id="video-camara" autoplay playsinline muted></video>
@@ -292,6 +291,7 @@
     const textoEstado = document.getElementById('texto-estado');
     const textoInferior = document.getElementById('texto-inferior');
     const textoMision = document.getElementById('texto-mision');
+    const bienvenida = document.getElementById('pantalla-bienvenida');
 
     let escaneoActivo = true;
     let detectorNativo;
@@ -312,8 +312,30 @@
       alert("Tu navegador no soporta el motor nativo de escaneo.");
     }
 
-    // Exponemos la conexión de forma global para que el botón de arriba la invoque al instante
-    window.conectarStream = function (stream) {
+    // FUNCIÓN UNIFICADA PRINCIPAL: Registrada correctamente en el objeto global
+    window.solicitarAccesoCamara = function () {
+      // Intenta la cámara trasera (Celulares)
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(function (stream) {
+          bienvenida.style.display = 'none';
+          guia.style.display = 'flex';
+          conectarStream(stream);
+        })
+        .catch(function () {
+          // Respaldo para PC o si la trasera está bloqueada
+          navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function (stream) {
+              bienvenida.style.display = 'none';
+              guia.style.display = 'flex';
+              conectarStream(stream);
+            })
+            .catch(function () {
+              alert("No se pudo conectar la cámara. Verifica los permisos de tu navegador.");
+            });
+        });
+    }
+
+    function conectarStream(stream) {
       video.srcObject = stream;
       video.play();
       video.addEventListener('loadedmetadata', function () {
@@ -327,7 +349,7 @@
       if (video.readyState === video.HAVE_ENOUGH_DATA) {
         detectorNativo.detect(video)
           .then(barcodes => {
-            // TU BLOQUE DE ESCANEO ORIGINAL IMPECABLE CON ÍNDICE [0]
+            // TU BLOQUE DE ESCANEO ORIGINAL PERFECTO CON ÍNDICE [0] INTACTO
             if (barcodes && barcodes.length > 0 && escaneoActivo) {
               const contenidoQR = barcodes[0].rawValue;
 
@@ -361,9 +383,7 @@
         setTimeout(() => {
           guia.style.display = 'none';
           escena3D.style.display = 'block';
-          setTimeout(() => {
-            mensaje.classList.add('mostrar-mensaje');
-          }, 50);
+          setTimeout(() => { mensaje.classList.add('mostrar-mensaje'); }, 50);
         }, 400);
       }, 1500);
     }
@@ -379,7 +399,7 @@
         textoInferior.style.background = 'rgba(0,0,0,0.7)';
         textoInferior.innerText = 'Apunta al QR físico para activar tu mensaje';
         guia.style.display = 'flex';
-        setTimeout(() => { guia.style.opacity = '1'; }, 50);
+        setTimeout(() => {guia.style.opacity = '1';}, 50);
         escaneoActivo = true;
         requestAnimationFrame(bucleDeteccionNativa);
       }, 600);
