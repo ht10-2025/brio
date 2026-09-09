@@ -1,173 +1,385 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Portal AR Tridimensional ✨</title>
-    <style>
-      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; background-color: #000; }
-      
-      #video-camara { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
 
-      /* Pantalla de bienvenida contra bloqueos de hardware */
-      #pantalla-bienvenida {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
-        display: flex; flex-direction: column; justify-content: center; align-items: center;
-        z-index: 99999; color: white; text-align: center; padding: 25px; box-sizing: border-box;
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Portal AR Tridimensional ✨</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: #000;
+    }
+
+    #video-camara {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 1;
+    }
+
+    /* Pantalla de bienvenida contra bloqueos de hardware */
+    #pantalla-bienvenida {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+      color: white;
+      text-align: center;
+      padding: 25px;
+      box-sizing: border-box;
+    }
+
+    .boton-magia {
+      padding: 18px 40px;
+      font-size: 18px;
+      border: none;
+      border-radius: 35px;
+      background: linear-gradient(45deg, #00ff96, #00b3ff);
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 30px;
+      box-shadow: 0 5px 25px rgba(0, 255, 150, 0.4);
+      transition: transform 0.2s;
+      pointer-events: auto;
+    }
+
+    .boton-magia:active {
+      transform: scale(0.95);
+    }
+
+    /* Interfaz de guía visual verde */
+    #guia-escaneo {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 40px 20px;
+      box-sizing: border-box;
+      z-index: 5;
+      pointer-events: none;
+      opacity: 1;
+      transition: opacity 0.5s ease;
+    }
+
+    .cuadro-mira {
+      width: 220px;
+      height: 220px;
+      border: 3px dashed #00ff96;
+      border-radius: 20px;
+      box-shadow: 0 0 15px rgba(0, 255, 150, 0.4);
+      margin: auto;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    #laser {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background-color: #00ff96;
+      box-shadow: 0 0 8px #00ff96;
+      animation: escanear 2s infinite ease-in-out;
+    }
+
+    .procesando-mira {
+      border-color: #FF8D1A !important;
+      box-shadow: 0 0 25px rgba(255, 141, 26, 0.6) !important;
+    }
+
+    .procesando-laser {
+      background-color: #FF8D1A !important;
+      box-shadow: 0 0 15px #FF8D1A !important;
+      animation: procesar 0.3s infinite alternate !important;
+    }
+
+    /* ESCENA TRIDIMENSIONAL PREMIUM */
+    #escena-3d {
+      display: none;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      perspective: 1200px;
+      perspective-origin: center;
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    /* CONTENEDOR DE PARTÍCULAS ESPACIALES */
+    #contenedor-particulas {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      pointer-events: none;
+      top: 0;
+      left: 0;
+    }
+
+    .particula {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      opacity: 0;
+      animation: lanzarParticula var(--duracion) ease-out infinite;
+      animation-delay: var(--retraso);
+    }
+
+    #mensaje-aliento {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      background: linear-gradient(135deg, rgba(15, 32, 39, 0.96) 0%, rgba(32, 58, 67, 0.96) 100%);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 35px 25px;
+      border-radius: 30px;
+      text-align: center;
+      width: 330px;
+      box-sizing: border-box;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      transform: translate(-50%, -50%) rotateX(35deg) translateZ(-150px);
+      transform-style: preserve-3d;
+      opacity: 0;
+      transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.6s ease;
+    }
+
+    .mostrar-mensaje {
+      opacity: 1 !important;
+      transform: translate(-50%, -50%) rotateX(0deg) translateZ(50px) !important;
+    }
+
+    .icono-flotante {
+      font-size: 45px;
+      margin-bottom: 5px;
+      display: inline-block;
+      animation: latido 1.5s infinite alternate cubic-bezier(0.215, 0.610, 0.355, 1);
+    }
+
+    .titulo-brillante {
+      font-size: 24px;
+      margin: 5px 0 15px 0;
+      font-weight: 800;
+      background: linear-gradient(45deg, #FFF, #FF8D1A);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .caja-mision {
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 3px solid #FF8D1A;
+      padding: 14px;
+      border-radius: 12px;
+      margin-top: 25px;
+      text-align: left;
+      box-sizing: border-box;
+    }
+
+    .boton-regresar {
+      padding: 14px 28px;
+      font-size: 16px;
+      border: none;
+      border-radius: 25px;
+      background: linear-gradient(45deg, #FF5733, #FF8D1A);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 25px;
+      box-shadow: 0 5px 15px rgba(255, 87, 51, 0.4);
+      width: 100%;
+      pointer-events: auto;
+    }
+
+    @keyframes escanear {
+
+      0%,
+      100% {
+        top: 0%;
       }
-      .boton-magia {
-        padding: 18px 40px; font-size: 18px; border: none; border-radius: 35px;
-        background: linear-gradient(45deg, #00ff96, #00b3ff); color: #000; font-weight: bold;
-        cursor: pointer; margin-top: 30px; box-shadow: 0 5px 25px rgba(0, 255, 150, 0.4);
-        transition: transform 0.2s; pointer-events: auto;
+
+      50% {
+        top: 100%;
       }
-      .boton-magia:active { transform: scale(0.95); }
+    }
 
-      /* Interfaz de guía visual verde */
-      #guia-escaneo {
-        display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        flex-direction: column; justify-content: space-between; align-items: center;
-        padding: 40px 20px; box-sizing: border-box; z-index: 5; pointer-events: none; opacity: 1;
-        transition: opacity 0.5s ease;
-      }
-      .cuadro-mira { width: 220px; height: 220px; border: 3px dashed #00ff96; border-radius: 20px; box-shadow: 0 0 15px rgba(0, 255, 150, 0.4); margin: auto; position: relative; transition: all 0.3s ease; }
-      #laser { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background-color: #00ff96; box-shadow: 0 0 8px #00ff96; animation: escanear 2s infinite ease-in-out; }
-
-      .procesando-mira { border-color: #FF8D1A !important; box-shadow: 0 0 25px rgba(255, 141, 26, 0.6) !important; }
-      .procesando-laser { background-color: #FF8D1A !important; box-shadow: 0 0 15px #FF8D1A !important; animation: procesar 0.3s infinite alternate !important; }
-
-      /* ESCENA TRIDIMENSIONAL PREMIUM */
-      #escena-3d { display: none; position: absolute; width: 100%; height: 100%; perspective: 1200px; perspective-origin: center; z-index: 10; background: rgba(0, 0, 0, 0.4); }
-      
-      /* CONTENEDOR DE PARTÍCULAS ESPACIALES */
-      #contenedor-particulas { position: absolute; width: 100%; height: 100%; transform-style: preserve-3d; pointer-events: none; }
-      .particula {
-        position: absolute; width: 6px; height: 6px; background: #00ff96; border-radius: 50%;
-        box-shadow: 0 0 10px #00ff96; opacity: 0; transition: opacity 0.5s;
+    @keyframes procesar {
+      0% {
+        top: 20%;
+        opacity: 0.4;
       }
 
-      #mensaje-aliento {
-        position: absolute; top: 50%; left: 50%; background: linear-gradient(135deg, rgba(15, 32, 39, 0.96) 0%, rgba(32, 58, 67, 0.96) 100%);
-        backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 35px 25px; border-radius: 30px; text-align: center; width: 330px; box-sizing: border-box; box-shadow: 0 20px 50px rgba(0,0,0,0.7);
-        transform: translate(-50%, -50%) rotateX(35deg) translateZ(-150px); transform-style: preserve-3d; opacity: 0; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.6s ease;
+      100% {
+        top: 80%;
+        opacity: 1;
       }
-      .mostrar-mensaje { opacity: 1 !important; transform: translate(-50%, -50%) rotateX(0deg) translateZ(50px) !important; }
-      .icono-flotante { font-size: 45px; margin-bottom: 5px; display: inline-block; animation: latido 1.5s infinite alternate cubic-bezier(0.215, 0.610, 0.355, 1); }
-      
-      .titulo-brillante { font-size: 24px; margin: 5px 0 15px 0; font-weight: 800; background: linear-gradient(45deg, #FFF, #FF8D1A); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-      .caja-mision { background: rgba(255, 255, 255, 0.05); border-left: 3px solid #FF8D1A; padding: 14px; border-radius: 12px; margin-top: 25px; text-align: left; box-sizing: border-box; }
-      .boton-regresar { padding: 14px 28px; font-size: 16px; border: none; border-radius: 25px; background: linear-gradient(45deg, #FF5733, #FF8D1A); color: white; font-weight: bold; cursor: pointer; margin-top: 25px; box-shadow: 0 5px 15px rgba(255,87,51,0.4); width: 100%; pointer-events: auto; }
+    }
 
-      @keyframes escanear { 0%, 100% { top: 0%; } 50% { top: 100%; } }
-      @keyframes procesar { 0% { top: 20%; opacity: 0.4; } 100% { top: 80%; opacity: 1; } }
-      @keyframes latido { 0% { transform: scale(0.92); } 100% { transform: scale(1.08); } }
-      @keyframes orbitar {
-        0% { transform: translate3d(var(--x1), var(--y1), var(--z1)); opacity: 1; }
-        100% { transform: translate3d(var(--x2), var(--y2), var(--z2)); opacity: 0; }
+    @keyframes latido {
+      0% {
+        transform: scale(0.92);
       }
-    </style>
-    
-  </head>
-  <body>
 
-    <div id="pantalla-bienvenida">
-      <h1 style="font-size: 26px; margin: 0; background: linear-gradient(45deg, #fff, #00ff96); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">✨ Portal de Bienestar ✨</h1>
-      <p style="color: #ccc; font-size: 15px; margin-top: 15px; max-width: 280px; line-height: 1.5;">Para activar los sensores tridimensionales y el video en tiempo real, presiona el botón de calibración.</p>
-      <button class="boton-magia" onclick="solicitarAccesoCamara()">Conectar Escáner</button>
+      100% {
+        transform: scale(1.08);
+      }
+    }
+
+    /* Nueva animación nativa de eyección 3D */
+    @keyframes lanzarParticula {
+      0% {
+        transform: translate3d(var(--x1), var(--y1), -50px);
+        opacity: 0;
+      }
+
+      15% {
+        opacity: 1;
+      }
+
+      100% {
+        transform: translate3d(var(--x2), var(--y2), var(--z2));
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="pantalla-bienvenida">
+    <h1
+      style="font-size: 26px; margin: 0; background: linear-gradient(45deg, #fff, #00ff96); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+      ✨ Portal de Bienestar ✨</h1>
+    <p style="color: #ccc; font-size: 15px; margin-top: 15px; max-width: 280px; line-height: 1.5;">Para activar los
+      sensores tridimensionales y el video en tiempo real, presiona el botón de calibración.</p>
+    <button class="boton-magia" onclick="solicitarAccesoCamara()">Conectar Escáner</button>
+  </div>
+
+  <video id="video-camara" autoplay playsinline muted></video>
+
+  <div id="guia-escaneo">
+    <h2 id="texto-estado"
+      style="margin: 0; font-size: 18px; color: #00ff96; text-shadow: 0 2px 4px #000; letter-spacing: 1px;">MODO ESCÁNER
+      ACTIVO</h2>
+    <div class="cuadro-mira" id="mira">
+      <div id="laser"></div>
     </div>
+    <p id="texto-inferior"
+      style="font-size: 14px; color: #fff; background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 20px; font-weight: bold; text-shadow: 0 1px 2px #000;">
+      Apunta al QR físico para activar tu mensaje
+    </p>
+  </div>
 
-    <video id="video-camara" autoplay playsinline muted></video>
+  <!-- ESCENA 3D HOLOGRÁFICA ENRIQUECIDA -->
+  <div id="escena-3d">
+    <div id="contenedor-particulas"></div>
 
-    <div id="guia-escaneo">
-      <h2 id="texto-estado" style="margin: 0; font-size: 18px; color: #00ff96; text-shadow: 0 2px 4px #000; letter-spacing: 1px;">MODO ESCÁNER ACTIVO</h2>
-      <div class="cuadro-mira" id="mira">
-        <div id="laser"></div>
-      </div>
-      <p id="texto-inferior" style="font-size: 14px; color: #fff; background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 20px; font-weight: bold; text-shadow: 0 1px 2px #000;">
-        Apunta al QR físico para activar tu mensaje
+    <div id="mensaje-aliento">
+      <div class="icono-flotante">✨🛸✨</div>
+      <h2 class="titulo-brillante" id="titulo-texto">¡Sintonía Exitosa!</h2>
+
+      <p style="font-size: 14.5px; line-height: 1.6; margin: 0; color: #e2e8f0; font-weight: 400;">
+        A veces el ritmo del día avanza tan rápido que olvidamos detenernos a asimilar el camino recorrido. Respira
+        hondo. Estás gestionando tus responsabilidades con gran dedicación y cada pequeño esfuerzo diario es valioso.
+        Confía en tu proceso y avanza a tu propio tiempo.
       </p>
-    </div>
 
-    <!-- ESCENA 3D HOLOGRÁFICA ENRIQUECIDA -->
-    <div id="escena-3d">
-      <div id="contenedor-particulas"></div>
-
-      <div id="mensaje-aliento">
-        <div class="icono-flotante">✨🛸✨</div>
-        <h2 class="titulo-brillante" id="titulo-texto">¡Sintonía Exitosa!</h2>
-        
-        <p style="font-size: 14.5px; line-height: 1.6; margin: 0; color: #e2e8f0; font-weight: 400;">
-          A veces el ritmo del día avanza tan rápido que olvidamos detenernos a asimilar el camino recorrido. Respira hondo. Estás gestionando tus responsabilidades con gran dedicación y cada pequeño esfuerzo diario es valioso. Confía en tu proceso y avanza a tu propio tiempo.
-        </p>
-        
-        <div class="caja-mision">
-          <strong style="color: #FF8D1A; font-size: 11px; display: block; margin-bottom: 5px; letter-spacing: 0.5px; text-transform: uppercase;">Misión de Bienestar</strong>
-          <span id="texto-mision" style="color: #cbd5e1; font-size: 13.5px; line-height: 1.45;">Analizando enfoque...</span>
-        </div>
-        <button class="boton-regresar" onclick="reestablecerPortal()">Volver a Escanear</button>
+      <div class="caja-mision">
+        <strong
+          style="color: #FF8D1A; font-size: 11px; display: block; margin-bottom: 5px; letter-spacing: 0.5px; text-transform: uppercase;">Misión
+          de Bienestar</strong>
+        <span id="texto-mision" style="color: #cbd5e1; font-size: 13.5px; line-height: 1.45;">Analizando
+          enfoque...</span>
       </div>
+      <button class="boton-regresar" onclick="reestablecerPortal()">Volver a Escanear</button>
     </div>
+  </div>
+  <script>
+    let escaneoActivo = true;
+    let detectorNativo;
+    const MI_URL_OFICIAL = window.location.href;
 
-    <script>
-      let escaneoActivo = true;
-      let detectorNativo;
-      const MI_URL_OFICIAL = window.location.href; 
+    const misionesDiarias = [
+      "Dedica 2 minutos a estirar los hombros y realizar respiraciones profundas.",
+      "Piensa en tres detalles sencillos por los que sientas gratitud en este momento.",
+      "Regálate una pausa corta, toma un vaso con agua y retoma tus tareas con calma.",
+      "Aléjate de las pantallas por 3 minutos para restaurar tu claridad y enfoque mental.",
+      "Reconoce tu esfuerzo de hoy. Has resuelto retos complejos y eso demuestra tu valía."
+    ];
 
-      const misionesDiarias = [
-        "Dedica 2 minutos a estirar los hombros y realizar respiraciones profundas.",
-        "Piensa en tres detalles sencillos por los que sientas gratitud en este momento.",
-        "Regálate una pausa corta, toma un vaso con agua y retoma tus tareas con calma.",
-        "Aléjate de las pantallas por 3 minutos para restaurar tu claridad y enfoque mental.",
-        "Reconoce tu esfuerzo de hoy. Has resuelto retos complejos y eso demuestra tu valía."
-      ];
+    if ('BarcodeDetector' in window) {
+      detectorNativo = new BarcodeDetector({ formats: ['qr_code'] });
+    }
 
-      if ('BarcodeDetector' in window) {
-        detectorNativo = new BarcodeDetector({ formats: ['qr_code'] });
-      }
-
-      function solicitarAccesoCamara() {
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then(function(stream) {
+    function solicitarAccesoCamara() {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(function (stream) {
           document.getElementById('pantalla-bienvenida').style.display = 'none';
           document.getElementById('guia-escaneo').style.display = 'flex';
           conectarStream(stream);
         })
-        .catch(function() {
-          navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+        .catch(function () {
+          navigator.mediaDevices.getUserMedia({ video: true }).then(function (stream) {
             document.getElementById('pantalla-bienvenida').style.display = 'none';
             document.getElementById('guia-escaneo').style.display = 'flex';
             conectarStream(stream);
           });
         });
-      }
+    }
 
-      function conectarStream(stream) {
-        const video = document.getElementById('video-camara');
-        video.srcObject = stream;
-        video.play();
-        video.addEventListener('loadedmetadata', function() {
-          if (detectorNativo) { bucleDeteccionNativa(); }
-        });
-      }
+    function conectarStream(stream) {
+      const video = document.getElementById('video-camara');
+      video.srcObject = stream;
+      video.play();
+      video.addEventListener('loadedmetadata', function () {
+        if (detectorNativo) { bucleDeteccionNativa(); }
+      });
+    }
 
-      function bucleDeteccionNativa() {
-        if (!escaneoActivo) return;
-        const video = document.getElementById('video-camara');
+    function bucleDeteccionNativa() {
+      if (!escaneoActivo) return;
+      const video = document.getElementById('video-camara');
 
-        if (video.readyState === video.HAVE_ENOUGH_DATA) {
-          detectorNativo.detect(video)
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        detectorNativo.detect(video)
           .then(barcodes => {
             if (barcodes && barcodes.length > 0 && escaneoActivo) {
-              const contenidoQR = barcodes[0].rawValue; 
-              
+              const contenidoQR = barcodes[0].rawValue;
+
               if (contenidoQR.includes("github.io") || contenidoQR.includes("localhost") || contenidoQR.includes("127.0.0.1") || contenidoQR.includes("?")) {
-                escaneoActivo = false; 
+                escaneoActivo = false;
 
                 // LECTURA DE NOMBRE PERSONALIZADO DESDE LA URL
                 const urlParams = new URLSearchParams(window.location.search);
                 const nombreUsuario = urlParams.get('nombre');
-                
+
                 if (nombreUsuario) {
                   document.getElementById('titulo-texto').innerText = `¡Hola, ${nombreUsuario}! ✨`;
                 } else {
@@ -182,77 +394,87 @@
             }
           })
           .catch(err => console.error(err));
-        }
-        if (escaneoActivo) { requestAnimationFrame(bucleDeteccionNativa); }
       }
+      if (escaneoActivo) { requestAnimationFrame(bucleDeteccionNativa); }
+    }
 
-      function ejecutarTransicionMagica() {
-        document.getElementById('mira').classList.add('procesando-mira');
-        document.getElementById('laser').classList.add('procesando-laser');
-        document.getElementById('texto-estado').style.color = '#FF8D1A';
-        document.getElementById('texto-estado').innerText = 'PROCESANDO ENERGÍA';
-        document.getElementById('texto-inferior').innerText = '⚡ Sincronizando vibras...';
+    function ejecutarTransicionMagica() {
+      document.getElementById('mira').classList.add('procesando-mira');
+      document.getElementById('laser').classList.add('procesando-laser');
+      document.getElementById('texto-estado').style.color = '#FF8D1A';
+      document.getElementById('texto-estado').innerText = 'PROCESANDO ENERGÍA';
+      document.getElementById('texto-inferior').innerText = '⚡ Sincronizando vibras...';
 
+      setTimeout(() => {
+        document.getElementById('guia-escaneo').style.opacity = '0';
         setTimeout(() => {
-          document.getElementById('guia-escaneo').style.opacity = '0';
-          setTimeout(() => {
-            document.getElementById('guia-escaneo').style.display = 'none';
-            document.getElementById('escena-3d').style.display = 'block';
-            
-            generarParticulasAR();
+          document.getElementById('guia-escaneo').style.display = 'none';
+          document.getElementById('escena-3d').style.display = 'block';
 
-            setTimeout(() => { document.getElementById('mensaje-aliento').classList.add('mostrar-mensaje'); }, 50);
-          }, 400);
-        }, 1500);
-      }
+          // DISPARAMOS LOS EFECTOS ESPECIALES DE PARTÍCULAS
+          generarParticulasAR();
 
-      function generarParticulasAR() {
-        const contenedor = document.getElementById('contenedor-particulas');
-        contenedor.innerHTML = ''; 
-        const colores = ['#00ff96', '#FF8D1A', '#00b3ff', '#ff007f'];
-        
-        for (let i = 0; i < 40; i++) {
-          const p = document.createElement('div');
-          p.className = 'particula';
-          
-          const x1 = window.innerWidth / 2;
-          const y1 = window.innerHeight / 2;
-          const z1 = -50;
-          
-          const x2 = x1 + (Math.random() - 0.5) * 400;
-          const y2 = y1 + (Math.random() - 0.5) * 500;
-          const z2 = Math.random() * 200; 
-          
-          p.style.setProperty('--x1', `${x1}px`); p.style.setProperty('--y1', `${y1}px`); p.style.setProperty('--z1', `${z1}px`);
-          p.style.setProperty('--x2', `${x2}px`); p.style.setProperty('--y2', `${y2}px`); p.style.setProperty('--z2', `${z2}px`);
-          
-          p.style.background = colores[Math.floor(Math.random() * colores.length)];
-          p.style.boxShadow = `0 0 10px ${p.style.background}`;
-          p.style.animation = `orbitar ${1.5 + Math.random() * 2}s cubic-bezier(0.1, 0.8, 0.25, 1) infinite`;
-          p.style.animationDelay = `${Math.random() * 0.5}s`;
-          
-          contenedor.appendChild(p);
-        }
-      }
+          setTimeout(() => { document.getElementById('mensaje-aliento').classList.add('mostrar-mensaje'); }, 50);
+        }, 400);
+      }, 1500);
+    }
 
-      window.reestablecerPortal = function() {
-        document.getElementById('mensaje-aliento').classList.remove('mostrar-mensaje');
-        document.getElementById('contenedor-particulas').innerHTML = ''; 
-        
-        setTimeout(() => {
-          document.getElementById('escena-3d').style.display = 'none';
-          document.getElementById('mira').classList.remove('procesando-mira');
-          document.getElementById('laser').classList.remove('procesando-laser');
-          document.getElementById('texto-estado').style.color = '#00ff96';
-          document.getElementById('texto-estado').innerText = 'MODO ESCÁNER ACTIVO';
-          document.getElementById('texto-inferior').style.background = 'rgba(0,0,0,0.7)';
-          document.getElementById('texto-inferior').innerText = 'Apunta al QR físico para activar tu mensaje';
-          document.getElementById('guia-escaneo').style.display = 'flex';
-          setTimeout(() => { document.getElementById('guia-escaneo').style.opacity = '1'; }, 50);
-          escaneoActivo = true;
-          requestAnimationFrame(bucleDeteccionNativa);
-        }, 600);
+    // MOTOR OPTIMIZADO PARA INYECCIÓN DE PARTÍCULAS EN EL BODY
+    function generarParticulasAR() {
+      const contenedor = document.getElementById('contenedor-particulas');
+      contenedor.innerHTML = '';
+      const colores = ['#00ff96', '#FF8D1A', '#00b3ff', '#ff007f'];
+
+      // Coordenadas fijas centrales basadas en la ventana del navegador
+      const x1 = window.innerWidth / 2;
+      const y1 = window.innerHeight / 2;
+
+      for (let i = 0; i < 45; i++) {
+        const p = document.createElement('div');
+        p.className = 'particula';
+
+        // Trayectorias expansivas en el espacio tridimensional
+        const x2 = x1 + (Math.random() - 0.5) * 500;
+        const y2 = y1 + (Math.random() - 0.5) * 600;
+        const z2 = Math.random() * 250;
+
+        // Inyectamos las variables directamente como estilos en línea CSS
+        p.style.setProperty('--x1', `${x1}px`);
+        p.style.setProperty('--y1', `${y1}px`);
+        p.style.setProperty('--x2', `${x2}px`);
+        p.style.setProperty('--y2', `${y2}px`);
+        p.style.setProperty('--z2', `${z2}px`);
+
+        // Parámetros de tiempo y renderizado aleatorios
+        p.style.setProperty('--duracion', `${1.5 + Math.random() * 2}s`);
+        p.style.setProperty('--retraso', `${Math.random() * 0.8}s`);
+
+        p.style.background = colores[Math.floor(Math.random() * colores.length)];
+        p.style.boxShadow = `0 0 12px ${p.style.background}`;
+
+        contenedor.appendChild(p);
       }
-    </script>
-  </body>
+    }
+
+    window.reestablecerPortal = function () {
+      document.getElementById('mensaje-aliento').classList.remove('mostrar-mensaje');
+      document.getElementById('contenedor-particulas').innerHTML = '';
+
+      setTimeout(() => {
+        document.getElementById('escena-3d').style.display = 'none';
+        document.getElementById('mira').classList.remove('procesando-mira');
+        document.getElementById('laser').classList.remove('procesando-laser');
+        document.getElementById('texto-estado').style.color = '#00ff96';
+        document.getElementById('texto-estado').innerText = 'MODO ESCÁNER ACTIVO';
+        document.getElementById('texto-inferior').style.background = 'rgba(0,0,0,0.7)';
+        document.getElementById('texto-inferior').innerText = 'Apunta al QR físico para activar tu mensaje';
+        document.getElementById('guia-escaneo').style.display = 'flex';
+        setTimeout(() => { document.getElementById('guia-escaneo').style.opacity = '1'; }, 50);
+        escaneoActivo = true;
+        requestAnimationFrame(bucleDeteccionNativa);
+      }, 600);
+    }
+  </script>
+</body>
+
 </html>
