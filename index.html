@@ -9,7 +9,7 @@
       
       #video-camara { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
 
-      /* Pantalla de bienvenida obligatoria contra bloqueos pasivos */
+      /* Pantalla de bienvenida obligatoria contra bloqueos de hardware */
       #pantalla-bienvenida {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
@@ -92,7 +92,28 @@
     </div>
 
     <script>
-      // Declaraciones globales iniciales fijos
+      // 1. DECLARACIÓN E INICIALIZACIÓN ABSOLUTA DE LA FUNCIÓN DE HARDWARE AL INICIO DEL SCRIPT
+      // Al estar aquí arriba, el botón de HTML la encuentra de inmediato sin importar lo que ocurra abajo.
+      window.solicitarAccesoCamara = function() {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(function(stream) {
+          document.getElementById('pantalla-bienvenida').style.display = 'none';
+          document.getElementById('guia-escaneo').style.display = 'flex';
+          conectarStream(stream);
+        })
+        .catch(function() {
+          navigator.mediaDevices.getUserMedia({ video: true })
+          .then(function(stream) {
+            document.getElementById('pantalla-bienvenida').style.display = 'none';
+            document.getElementById('guia-escaneo').style.display = 'flex';
+            conectarStream(stream);
+          })
+          .catch(function() {
+            alert("Acceso a la cámara denegado. Revisa el candado de la URL.");
+          });
+        });
+      }
+
       const video = document.getElementById('video-camara');
       const escena3D = document.getElementById('escena-3d');
       const mensaje = document.getElementById('mensaje-aliento');
@@ -102,7 +123,6 @@
       const textoEstado = document.getElementById('texto-estado');
       const textoInferior = document.getElementById('texto-inferior');
       const textoMision = document.getElementById('texto-mision');
-      const bienvenida = document.getElementById('pantalla-bienvenida');
       
       let escaneoActivo = true;
       let detectorNativo;
@@ -123,27 +143,6 @@
         alert("Tu navegador no soporta el motor nativo de escaneo.");
       }
 
-      // FUNCIÓN CORREGIDA A NIVEL GLOBAL NATIVO: Evita el error de "not defined" en el primer milisegundo
-      function solicitarAccesoCamara() {
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then(function(stream) {
-          bienvenida.style.display = 'none';
-          guia.style.display = 'flex';
-          conectarStream(stream);
-        })
-        .catch(function() {
-          navigator.mediaDevices.getUserMedia({ video: true })
-          .then(function(stream) {
-            bienvenida.style.display = 'none';
-            guia.style.display = 'flex';
-            conectarStream(stream);
-          })
-          .catch(function() {
-            alert("Acceso a la cámara denegado. Revisa el candado de la URL.");
-          });
-        });
-      }
-
       function conectarStream(stream) {
         video.srcObject = stream;
         video.play();
@@ -158,12 +157,13 @@
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
           detectorNativo.detect(video)
           .then(barcodes => {
-            // USO DE ENCADENAMIENTO OPCIONAL (?.): Protección blindada contra fotogramas vacíos
+            // 2. EXTRACCIÓN CON ESTÁNDAR WEB OFICIAL DE GOOGLE CHROME/BRAVE
+            // Accedemos de forma directa al objeto [0] de la lista antes de extraer la variable rawValue
             if (barcodes && barcodes.length > 0 && escaneoActivo) {
-              
-              const contenidoQR = barcodes[0]?.rawValue || ""; 
-              
+const contenidoQR = barcodes[0].rawValue;
+
 if (contenidoQR.includes("github.io") || contenidoQR === MI_URL_OFICIAL || contenidoQR.includes("localhost") || contenidoQR.includes("127.0.0.1")) {escaneoActivo = false;
+
   const indice = Math.floor(Math.random() * misionesDiarias.length);
   textoMision.innerText = misionesDiarias[indice];
 
@@ -174,8 +174,8 @@ if (contenidoQR.includes("github.io") || contenidoQR === MI_URL_OFICIAL || conte
 .catch(err => console.error(err));
 }
 
-if (escaneoActivo) {
-  requestAnimationFrame(bucleDeteccionNativa);}
+if (escaneoActivo) { 
+  requestAnimationFrame(bucleDeteccionNativa); }
 }
 
 function ejecutarTransicionMagica() {
@@ -190,24 +190,24 @@ function ejecutarTransicionMagica() {
     setTimeout(() => {
       guia.style.display = 'none';
       escena3D.style.display = 'block';
-      setTimeout(() => { mensaje.classList.add('mostrar-mensaje'); }, 50);
-    }, 400);
-  }, 1500);
-}
+      setTimeout(() => {mensaje.classList.add('mostrar-mensaje'); }, 50);
+      }, 400);
+    }, 1500);
+  }
 
-window.reestablecerPortal = function() {
-  mensaje.classList.remove('mostrar-mensaje');
-  setTimeout(() => {
-    escena3D.style.display = 'none';
-  mira.classList.remove('procesando-mira');
-  laser.classList.remove('procesando-laser');
-  textoEstado.style.color = '#00ff96';
-  textoEstado.innerText = 'MODO ESCÁNER ACTIVO';
-  textoInferior.style.background = 'rgba(0,0,0,0.7)';
-  textoInferior.innerText = 'Apunta al QR físico para activar tu mensaje';
-  guia.style.display = 'flex';
-  setTimeout(() => { guia.style.opacity = '1'; }, 50);
-  escaneoActivo = true;
-  requestAnimationFrame(bucleDeteccionNativa);
-}, 600);
-}
+  window.reestablecerPortal = function() {
+    mensaje.classList.remove('mostrar-mensaje');
+    setTimeout(() => {
+      escena3D.style.display = 'none';
+      mira.classList.remove('procesando-mira');
+      laser.classList.remove('procesando-laser');
+      textoEstado.style.color = '#00ff96';
+      textoEstado.innerText = 'MODO ESCÁNER ACTIVO';
+      textoInferior.style.background = 'rgba(0,0,0,0.7)';
+      textoInferior.innerText = 'Apunta al QR físico para activar tu mensaje';
+      guia.style.display = 'flex';
+      setTimeout(() => { guia.style.opacity = '1'; }, 50);
+      escaneoActivo = true;
+      requestAnimationFrame(bucleDeteccionNativa);
+    }, 600);
+    }
