@@ -67,6 +67,48 @@
         100% { transform: translate3d(var(--x2), var(--y2), var(--z2)); opacity: 0; }
       }
     </style>
+    
+  </head>
+  <body>
+
+    <div id="pantalla-bienvenida">
+      <h1 style="font-size: 26px; margin: 0; background: linear-gradient(45deg, #fff, #00ff96); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">✨ Portal de Bienestar ✨</h1>
+      <p style="color: #ccc; font-size: 15px; margin-top: 15px; max-width: 280px; line-height: 1.5;">Para activar los sensores tridimensionales y el video en tiempo real, presiona el botón de calibración.</p>
+      <button class="boton-magia" onclick="solicitarAccesoCamara()">Conectar Escáner</button>
+    </div>
+
+    <video id="video-camara" autoplay playsinline muted></video>
+
+    <div id="guia-escaneo">
+      <h2 id="texto-estado" style="margin: 0; font-size: 18px; color: #00ff96; text-shadow: 0 2px 4px #000; letter-spacing: 1px;">MODO ESCÁNER ACTIVO</h2>
+      <div class="cuadro-mira" id="mira">
+        <div id="laser"></div>
+      </div>
+      <p id="texto-inferior" style="font-size: 14px; color: #fff; background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 20px; font-weight: bold; text-shadow: 0 1px 2px #000;">
+        Apunta al QR físico para activar tu mensaje
+      </p>
+    </div>
+
+    <!-- ESCENA 3D HOLOGRÁFICA ENRIQUECIDA -->
+    <div id="escena-3d">
+      <div id="contenedor-particulas"></div>
+
+      <div id="mensaje-aliento">
+        <div class="icono-flotante">✨🛸✨</div>
+        <h2 class="titulo-brillante" id="titulo-texto">¡Sintonía Exitosa!</h2>
+        
+        <p style="font-size: 14.5px; line-height: 1.6; margin: 0; color: #e2e8f0; font-weight: 400;">
+          A veces el ritmo del día avanza tan rápido que olvidamos detenernos a asimilar el camino recorrido. Respira hondo. Estás gestionando tus responsabilidades con gran dedicación y cada pequeño esfuerzo diario es valioso. Confía en tu proceso y avanza a tu propio tiempo.
+        </p>
+        
+        <div class="caja-mision">
+          <strong style="color: #FF8D1A; font-size: 11px; display: block; margin-bottom: 5px; letter-spacing: 0.5px; text-transform: uppercase;">Misión de Bienestar</strong>
+          <span id="texto-mision" style="color: #cbd5e1; font-size: 13.5px; line-height: 1.45;">Analizando enfoque...</span>
+        </div>
+        <button class="boton-regresar" onclick="reestablecerPortal()">Volver a Escanear</button>
+      </div>
+    </div>
+
     <script>
       let escaneoActivo = true;
       let detectorNativo;
@@ -212,46 +254,5 @@
         }, 600);
       }
     </script>
-  </head>
-  <body>
-
-    <div id="pantalla-bienvenida">
-      <h1 style="font-size: 26px; margin: 0; background: linear-gradient(45deg, #fff, #00ff96); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">✨ Portal de Bienestar ✨</h1>
-      <p style="color: #ccc; font-size: 15px; margin-top: 15px; max-width: 280px; line-height: 1.5;">Para activar los sensores tridimensionales y el video en tiempo real, presiona el botón de calibración.</p>
-      <button class="boton-magia" onclick="solicitarAccesoCamara()">Conectar Escáner</button>
-    </div>
-
-    <video id="video-camara" autoplay playsinline muted></video>
-
-    <div id="guia-escaneo">
-      <h2 id="texto-estado" style="margin: 0; font-size: 18px; color: #00ff96; text-shadow: 0 2px 4px #000; letter-spacing: 1px;">MODO ESCÁNER ACTIVO</h2>
-      <div class="cuadro-mira" id="mira">
-        <div id="laser"></div>
-      </div>
-      <p id="texto-inferior" style="font-size: 14px; color: #fff; background: rgba(0,0,0,0.7); padding: 8px 16px; border-radius: 20px; font-weight: bold; text-shadow: 0 1px 2px #000;">
-        Apunta al QR físico para activar tu mensaje
-      </p>
-    </div>
-
-    <!-- ESCENA 3D HOLOGRÁFICA ENRIQUECIDA -->
-    <div id="escena-3d">
-      <div id="contenedor-particulas"></div>
-
-      <div id="mensaje-aliento">
-        <div class="icono-flotante">✨🛸✨</div>
-        <h2 class="titulo-brillante" id="titulo-texto">¡Sintonía Exitosa!</h2>
-        
-        <p style="font-size: 14.5px; line-height: 1.6; margin: 0; color: #e2e8f0; font-weight: 400;">
-          A veces el ritmo del día avanza tan rápido que olvidamos detenernos a asimilar el camino recorrido. Respira hondo. Estás gestionando tus responsabilidades con gran dedicación y cada pequeño esfuerzo diario es valioso. Confía en tu proceso y avanza a tu propio tiempo.
-        </p>
-        
-        <div class="caja-mision">
-          <strong style="color: #FF8D1A; font-size: 11px; display: block; margin-bottom: 5px; letter-spacing: 0.5px; text-transform: uppercase;">Misión de Bienestar</strong>
-          <span id="texto-mision" style="color: #cbd5e1; font-size: 13.5px; line-height: 1.45;">Analizando enfoque...</span>
-        </div>
-        <button class="boton-regresar" onclick="reestablecerPortal()">Volver a Escanear</button>
-      </div>
-    </div>
-
   </body>
 </html>
