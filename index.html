@@ -24,7 +24,7 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      z-index: 1;
+      z-index: 2;
     }
 
     /* Pantalla de bienvenida obligatoria contra bloqueos de hardware */
@@ -78,7 +78,7 @@
       align-items: center;
       padding: 40px 20px;
       box-sizing: border-box;
-      z-index: 5;
+      z-index: 10;
       pointer-events: none;
       opacity: 1;
       transition: opacity 0.5s ease;
@@ -126,7 +126,7 @@
       height: 100%;
       perspective: 1200px;
       perspective-origin: center;
-      z-index: 10;
+      z-index: 20;
       background: rgba(0, 0, 0, 0.4);
     }
 
@@ -380,7 +380,7 @@
         textoInferior.innerText = 'Apunta al QR físico para activar tu mensaje';
         guia.style.display = 'flex';
         setTimeout(() => { guia.style.opacity = '1'; }, 50);
-        escaneoActivo = true; 
+        escaneoActivo = true;
         requestAnimationFrame(bucleDeteccionNativa);
       }, 600);
     }
